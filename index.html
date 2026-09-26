@@ -130,6 +130,67 @@
         .theme-nutrieye #winnerTitle { color: #0f5f5c !important; }
         .theme-nutrieye #winnerText { color: #6e4a6c !important; text-shadow: none !important; }
         .theme-nutrieye #winnerWait { color: #6b7280 !important; }
+
+        /* Nutrieye theme readability / UI overrides */
+        .theme-nutrieye #landing-view {
+            background:
+                radial-gradient(circle at 50% 18%, rgba(255,255,255,.96) 0%, rgba(255,250,235,.92) 28%, rgba(247,237,200,.92) 68%, rgba(235,221,164,.96) 100%);
+            color: #123f3c;
+        }
+        .theme-nutrieye #landing-view > h1 {
+            background: none !important;
+            color: #d99f00 !important;
+            -webkit-text-fill-color: #d99f00 !important;
+            text-shadow: 0 3px 0 rgba(255,255,255,.7), 0 10px 24px rgba(110,74,108,.12);
+        }
+        .theme-nutrieye #landing-view > p { color: #6e4a6c !important; }
+        .theme-nutrieye #landing-view .preset-label { color: #6e4a6c !important; }
+        .theme-nutrieye #landing-view .preset-heading { color: #0f5f5c !important; }
+        .theme-nutrieye #landing-view .preset-card {
+            background: rgba(255,255,255,.78) !important;
+            border-color: rgba(15,95,92,.18) !important;
+            box-shadow: 0 6px 20px rgba(95,72,31,.08);
+        }
+        .theme-nutrieye #landing-view .preset-card .preset-title { color: #0f5f5c !important; }
+        .theme-nutrieye #landing-view .preset-card .preset-desc { color: #6b7280 !important; }
+        .theme-nutrieye #landing-view .preset-card.active {
+            background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,248,222,.96)) !important;
+            border-color: #d99f00 !important;
+            box-shadow: 0 0 0 2px rgba(217,159,0,.14), 0 14px 34px rgba(110,74,108,.14);
+        }
+        .theme-nutrieye #audience-card {
+            background: rgba(255,255,255,.84) !important;
+            border-color: rgba(15,95,92,.20) !important;
+            box-shadow: 0 16px 36px rgba(110,74,108,.10);
+        }
+        .theme-nutrieye #audience-card h2 { color: #0f5f5c !important; }
+        .theme-nutrieye #audience-card p { color: #5f6668 !important; }
+        .theme-nutrieye #controller-gear {
+            background: #fffaf0 !important;
+            border-color: rgba(110,74,108,.22) !important;
+            color: #6e4a6c !important;
+        }
+        .theme-nutrieye #preset-status { color: #0f8f78 !important; }
+        .theme-nutrieye #auth-status.text-emerald-400 { color: #0f8f78 !important; }
+        .theme-nutrieye #display-view {
+            background: radial-gradient(circle at 50% 28%, #fffdf7 0%, #f7edc8 52%, #e9dba7 100%);
+        }
+        .theme-nutrieye #display-view > button {
+            background: rgba(15,95,92,.92) !important;
+            border-color: rgba(255,255,255,.38) !important;
+            color: white !important;
+        }
+        .theme-nutrieye #controllerLoginModal .glass-panel {
+            background: rgba(255,250,235,.98) !important;
+            border-color: rgba(15,95,92,.18) !important;
+        }
+        .theme-nutrieye #controllerLoginModal h2 { color: #0f5f5c !important; }
+        .theme-nutrieye #controllerLoginModal p { color: #6e4a6c !important; }
+        .theme-nutrieye #controllerLoginModal input {
+            background: white !important;
+            color: #123f3c !important;
+            border-color: rgba(15,95,92,.25) !important;
+        }
     </style>
 </head>
 <body>
@@ -142,8 +203,8 @@
         <div class="w-full max-w-2xl mb-6 text-left">
             <div class="flex items-end justify-between mb-3">
                 <div>
-                    <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Wheel Preset</p>
-                    <h2 class="text-lg font-semibold text-white">Choose a visual style</h2>
+                    <p class="preset-label text-xs uppercase tracking-[0.22em] text-slate-500">Wheel Preset</p>
+                    <h2 class="preset-heading text-lg font-semibold text-white">Choose a visual style</h2>
                 </div>
                 <span id="preset-status" class="text-xs text-emerald-400">Classic Night selected</span>
             </div>
@@ -151,8 +212,8 @@
                 <button id="preset-classic" onclick="setWheelPreset('classic')" class="preset-card active glass-panel border border-white/20 rounded-2xl p-4 text-left">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <div class="font-bold text-white">Classic Night</div>
-                            <div class="text-xs text-slate-400 mt-1">Original dark lucky-draw look</div>
+                            <div class="preset-title font-bold text-white">Classic Night</div>
+                            <div class="preset-desc text-xs text-slate-400 mt-1">Original dark lucky-draw look</div>
                         </div>
                         <div class="flex gap-1.5 shrink-0">
                             <span class="preset-dot" style="background:#ef4444"></span>
@@ -166,23 +227,23 @@
                     <div class="absolute inset-y-0 right-0 w-24 nutrieye-preview-bg opacity-25"></div>
                     <div class="flex items-center justify-between gap-3 relative z-10">
                         <div>
-                            <div class="font-bold text-white">Nutrieye Marigold</div>
-                            <div class="text-xs text-slate-400 mt-1">Marigold · teal · cream · plum</div>
+                            <div class="preset-title font-bold text-white">Nutrieye Marigold</div>
+                            <div class="preset-desc text-xs text-slate-400 mt-1">Marigold · teal · cream · plum</div>
                         </div>
-                        <img src="Nutrieye_Front.png" alt="Nutrieye" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
+                        <img src="./Nutrieye_Front.png" alt="Nutrieye" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
                     </div>
                 </button>
             </div>
         </div>
         
         <div class="relative w-full max-w-2xl">
-            <button onclick="selectMode('display')" class="w-full glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
+            <button id="audience-card" onclick="selectMode('display')" class="w-full glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Audience Display</h2>
                 <p class="text-slate-300 relative z-10 max-w-md">Show this screen on the big monitor or projector. It will react to the controller automatically.</p>
             </button>
 
-            <button onclick="openControllerLogin()" title="Backroom Controller" class="absolute -top-3 right-4 glass-panel hover:bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center border border-white/30 shadow-lg transition-all z-20">
+            <button id="controller-gear" onclick="openControllerLogin()" title="Backroom Controller" class="absolute -top-3 right-4 glass-panel hover:bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center border border-white/30 shadow-lg transition-all z-20">
                 <span class="text-2xl" aria-hidden="true">⚙️</span>
             </button>
         </div>
@@ -333,7 +394,7 @@
             },
             nutrieye: {
                 name: 'Nutrieye Marigold',
-                colors: ["#e5b500", "#f6ce55", "#0f5f5c", "#6e4a6c", "#f1df9a", "#d99f00", "#2f7771", "#9c7699"],
+                colors: ["#e5b500", "#0f5f5c", "#f4df9a", "#6e4a6c", "#d99f00", "#2f7771", "#fff4cf", "#9c7699"],
                 title: 'NUTRIEYE LUCKY DRAW',
                 subtitle: 'Spin for a Bright Surprise'
             }
@@ -608,8 +669,8 @@
                 ctx.fillStyle = wheelColors[i % wheelColors.length];
                 ctx.fill();
 
-                ctx.lineWidth = 4;
-                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                ctx.lineWidth = activePreset === 'nutrieye' ? 5 : 4;
+                ctx.strokeStyle = activePreset === 'nutrieye' ? "rgba(255,255,255,0.58)" : "rgba(0,0,0,0.2)";
                 ctx.stroke();
 
                 ctx.save();
@@ -618,13 +679,19 @@
 
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
-                ctx.fillStyle = "#ffffff";
+                if (activePreset === 'nutrieye') {
+                    const sliceColor = wheelColors[i % wheelColors.length].toLowerCase();
+                    const lightSlices = ['#f4df9a', '#fff4cf'];
+                    ctx.fillStyle = lightSlices.includes(sliceColor) ? '#0f5f5c' : '#ffffff';
+                } else {
+                    ctx.fillStyle = "#ffffff";
+                }
 
                 let fontSize = wheelNames.length > 20 ? 20 : (wheelNames.length > 12 ? 26 : 32);
                 ctx.font = `bold ${fontSize}px Inter, sans-serif`;
 
-                ctx.shadowColor = "rgba(0,0,0,0.5)";
-                ctx.shadowBlur = 4;
+                ctx.shadowColor = activePreset === 'nutrieye' ? "rgba(15,95,92,0.28)" : "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = activePreset === 'nutrieye' ? 2 : 4;
                 ctx.shadowOffsetX = 1;
                 ctx.shadowOffsetY = 1;
 
@@ -633,10 +700,28 @@
                 ctx.restore();
             }
 
+            if (activePreset === 'nutrieye') {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius - 2, 0, Math.PI * 2);
+                ctx.lineWidth = 14;
+                ctx.strokeStyle = '#0f5f5c';
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius - 12, 0, Math.PI * 2);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#e5b500';
+                ctx.stroke();
+            }
+
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.05, 0, Math.PI * 2);
-            ctx.fillStyle = "#1e293b";
+            ctx.fillStyle = activePreset === 'nutrieye' ? "#fff4cf" : "#1e293b";
             ctx.fill();
+            if (activePreset === 'nutrieye') {
+                ctx.lineWidth = 7;
+                ctx.strokeStyle = '#0f5f5c';
+                ctx.stroke();
+            }
         }
 
         function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
