@@ -206,23 +206,22 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-        // Environment variables injected by platform
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
-        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        let firebaseConfig = {};
-        try { firebaseConfig = JSON.parse(firebaseConfigStr); } catch (e) { console.error("Invalid firebase config"); }
+        const SUPABASE_URL = "https://uhijcfejfkaentfavojl.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3muMLB8AzkBBWySV_2jWyQ_iXj0AnTF";
+        const STATE_TABLE = "lucky_draw_state";
+        const STATE_ID = 1;
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
         // Core App State
         let currentMode = null; // 'display' or 'controller'
-        let db, auth;
-        let docRef;
-        let isFirebaseReady = false;
+        let isSupabaseReady = false;
+        let displayInitialized = false;
+        let controllerInitialized = false;
+        let displayChannel = null;
+        let controllerChannel = null;
 
         // Wheel State
         let wheelNames = ["Loading..."];
@@ -246,43 +245,50 @@
         const btnSpin = document.getElementById('btn-spin');
         const btnDismissWinner = document.getElementById('btn-dismiss-winner');
         const ctrlCount = document.getElementById('ctrl-count');
+        const authStatus = document.getElementById('auth-status');
 
-        async function initFirebase() {
+        function setConnectionStatus(message, ok = false) {
+            if (!authStatus) return;
+            authStatus.innerText = message;
+            authStatus.classList.remove('text-red-500', 'text-emerald-400', 'text-slate-500');
+            authStatus.classList.add(ok ? 'text-emerald-400' : 'text-red-500');
+        }
+
+        async function fetchState() {
+            const { data, error } = await supabase
+                .from(STATE_TABLE)
+                .select('*')
+                .eq('id', STATE_ID)
+                .single();
+
+            if (error) throw error;
+            return data;
+        }
+
+        async function updateState(changes) {
+            const { error } = await supabase
+                .from(STATE_TABLE)
+                .update(changes)
+                .eq('id', STATE_ID);
+
+            if (error) throw error;
+        }
+
+        async function initSupabase() {
             try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Verify that the browser can read the shared state row.
+                await fetchState();
 
-                // Strictly adhering to RULE 1 path structure for public data
-                docRef = doc(db, 'artifacts', appId, 'public', 'data', 'lucky_draw_state', 'main');
-                
-                // Initialize default state if not exists
-                const snap = await getDoc(docRef);
-                if (!snap.exists()) {
-                    await setDoc(docRef, {
-                        names: ["Alice", "Bob", "Charlie", "Diana", "Ethan", "Fiona"],
-                        removeWinner: true,
-                        spinState: { timestamp: 0, winnerIndex: -1, showWinnerModal: false }
-                    });
-                }
+                isSupabaseReady = true;
+                setConnectionStatus("Connected!", true);
 
-                isFirebaseReady = true;
-                document.getElementById('auth-status').innerText = "Connected!";
-                
-                // If a mode was already selected while loading, initialize it
+                // If a mode was already selected while loading, initialize it.
                 if (currentMode === 'display') initDisplay();
                 if (currentMode === 'controller') initController();
-
             } catch (err) {
-                console.error("Firebase init failed:", err);
-                document.getElementById('auth-status').innerText = "Connection failed. Retrying in background...";
-                document.getElementById('auth-status').classList.add('text-red-500');
+                console.error("Supabase init failed:", err);
+                isSupabaseReady = false;
+                setConnectionStatus("Connection failed. Check Supabase settings/policies.");
             }
         }
 
@@ -290,54 +296,78 @@
         window.selectMode = function(mode) {
             currentMode = mode;
             document.getElementById('landing-view').classList.add('hidden-view');
-            
+
             if (mode === 'display') {
                 document.getElementById('display-view').classList.remove('hidden-view');
-                if (isFirebaseReady) initDisplay();
+                if (isSupabaseReady) initDisplay();
             } else {
                 document.getElementById('controller-view').classList.remove('hidden-view');
-                if (isFirebaseReady) initController();
+                if (isSupabaseReady) initController();
             }
         };
 
-        function initDisplay() {
-            // Draw initial wheel
+        function handleDisplayState(data, isInitial = false) {
+            if (!data) return;
+
+            // Only update names if we aren't currently spinning.
+            if (!isSpinning) {
+                wheelNames = Array.isArray(data.names) ? data.names : [];
+                drawWheel();
+            }
+
+            const timestamp = Number(data.spin_timestamp || 0);
+
+            // Do not replay an old spin when a display first opens.
+            if (isInitial) {
+                lastSpinTimestamp = timestamp;
+            } else if (timestamp > lastSpinTimestamp) {
+                lastSpinTimestamp = timestamp;
+                triggerSpinVisuals(Number(data.winner_index), data.winner_name);
+            }
+
+            if (data.show_winner_modal && !isSpinning) {
+                showWinnerModal(data.winner_name);
+            } else if (!data.show_winner_modal) {
+                hideWinnerModal();
+            }
+        }
+
+        async function initDisplay() {
+            if (displayInitialized) return;
+            displayInitialized = true;
+
             drawWheel();
 
-            // Listen to real-time updates
-            onSnapshot(docRef, (docSnap) => {
-                if (!docSnap.exists()) return;
-                const data = docSnap.data();
+            try {
+                const initialState = await fetchState();
+                handleDisplayState(initialState, true);
+            } catch (error) {
+                console.error("Display initial load error:", error);
+            }
 
-                // Only update names if we aren't currently spinning
-                // Otherwise it interrupts the visual spin
-                if (!isSpinning) {
-                    wheelNames = data.names || [];
-                    drawWheel();
-                }
-
-                // Handle Spin Trigger
-                const spinData = data.spinState || { timestamp: 0 };
-                if (spinData.timestamp > lastSpinTimestamp) {
-                    lastSpinTimestamp = spinData.timestamp;
-                    triggerSpinVisuals(spinData.winnerIndex, spinData.winnerName);
-                }
-
-                // Handle Modal State
-                if (spinData.showWinnerModal && !isSpinning) {
-                    showWinnerModal(spinData.winnerName);
-                } else if (!spinData.showWinnerModal) {
-                    hideWinnerModal();
-                }
-            }, (error) => {
-                console.error("Display sync error:", error);
-            });
+            displayChannel = supabase
+                .channel('lucky-draw-display')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: STATE_TABLE,
+                        filter: `id=eq.${STATE_ID}`
+                    },
+                    (payload) => handleDisplayState(payload.new, false)
+                )
+                .subscribe((status) => {
+                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        console.error('Display realtime channel status:', status);
+                    }
+                });
         }
 
         function drawWheel() {
             if (!ctx || !canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const radius = Math.min(centerX, centerY) - 20;
@@ -365,7 +395,7 @@
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.fillStyle = wheelColors[i % wheelColors.length];
                 ctx.fill();
-                
+
                 ctx.lineWidth = 4;
                 ctx.strokeStyle = "rgba(0,0,0,0.2)";
                 ctx.stroke();
@@ -373,24 +403,24 @@
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(startAngle + sliceAngle / 2);
-                
+
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = "#ffffff";
-                
+
                 let fontSize = wheelNames.length > 20 ? 20 : (wheelNames.length > 12 ? 26 : 32);
                 ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-                
+
                 ctx.shadowColor = "rgba(0,0,0,0.5)";
                 ctx.shadowBlur = 4;
                 ctx.shadowOffsetX = 1;
                 ctx.shadowOffsetY = 1;
 
                 const textX = radius - 30;
-                ctx.fillText(wheelNames[i], textX, 0, radius - 80); 
+                ctx.fillText(wheelNames[i], textX, 0, radius - 80);
                 ctx.restore();
             }
-            
+
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.05, 0, Math.PI * 2);
             ctx.fillStyle = "#1e293b";
@@ -412,14 +442,17 @@
 
         function triggerSpinVisuals(targetIndex, winnerName) {
             if (wheelNames.length === 0) return;
+            if (!Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= wheelNames.length) {
+                console.error('Invalid winner index received:', targetIndex);
+                return;
+            }
+
             isSpinning = true;
             hideWinnerModal();
 
-            // Match current local list with whatever was used to spin, just in case
-            // If length changed, it might look slightly off initially but fixes on redraw
             const sliceAngleDeg = 360 / wheelNames.length;
             const targetSliceCenterLocal = targetIndex * sliceAngleDeg + (sliceAngleDeg / 2);
-            
+
             let requiredFinalMod = (270 - targetSliceCenterLocal) % 360;
             if (requiredFinalMod < 0) requiredFinalMod += 360;
 
@@ -427,7 +460,7 @@
             const currentMod = currentRotation % 360;
             let deltaRotation = (requiredFinalMod - currentMod);
             if (deltaRotation < 0) deltaRotation += 360;
-            
+
             const randomJitter = (Math.random() - 0.5) * (sliceAngleDeg * 0.7);
             const targetRotation = currentRotation + deltaRotation + extraSpins + randomJitter;
 
@@ -442,14 +475,13 @@
 
                 const easeProgress = easeOutCubic(progress);
                 currentRotation = initialRotation + (targetRotation - initialRotation) * easeProgress;
-                
+
                 drawWheel();
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
                     isSpinning = false;
-                    // Trigger modal manually if firestore hasn't done it yet
                     showWinnerModal(winnerName);
                     triggerConfetti();
                 }
@@ -473,55 +505,88 @@
             winnerPanel.classList.add('scale-95');
         }
 
-        function initController() {
-            // Listen to real-time updates to keep controller in sync
-            onSnapshot(docRef, (docSnap) => {
-                if (!docSnap.exists()) return;
-                const data = docSnap.data();
-                
-                // Only update textarea if user isn't currently typing to avoid losing changes
-                if (document.activeElement !== ctrlNames) {
-                    ctrlNames.value = (data.names || []).join('\n');
-                    updateControllerCount();
-                    updateRigDropdown(data.names || []);
-                }
-                
-                ctrlRemove.checked = data.removeWinner === true;
+        function applyControllerState(data) {
+            if (!data) return;
 
-                // Sync UI state for buttons based on spin state
-                const spinData = data.spinState || {};
-                if (spinData.showWinnerModal) {
-                    btnDismissWinner.disabled = false;
-                    btnDismissWinner.classList.replace('bg-slate-600', 'bg-indigo-600');
-                } else {
-                    btnDismissWinner.disabled = true;
-                    btnDismissWinner.classList.replace('bg-indigo-600', 'bg-slate-600');
-                }
-            }, (error) => {
-                console.error("Controller sync error:", error);
-            });
+            const names = Array.isArray(data.names) ? data.names : [];
+
+            // Only update textarea if user isn't currently typing to avoid losing changes.
+            if (document.activeElement !== ctrlNames) {
+                ctrlNames.value = names.join('\n');
+                updateControllerCount();
+                updateRigDropdown(names);
+            }
+
+            ctrlRemove.checked = data.remove_winner === true;
+
+            if (data.show_winner_modal) {
+                btnDismissWinner.disabled = false;
+                btnDismissWinner.classList.replace('bg-slate-600', 'bg-indigo-600');
+            } else {
+                btnDismissWinner.disabled = true;
+                btnDismissWinner.classList.replace('bg-indigo-600', 'bg-slate-600');
+            }
+        }
+
+        async function initController() {
+            if (controllerInitialized) return;
+            controllerInitialized = true;
+
+            try {
+                const initialState = await fetchState();
+                applyControllerState(initialState);
+            } catch (error) {
+                console.error("Controller initial load error:", error);
+            }
+
+            controllerChannel = supabase
+                .channel('lucky-draw-controller')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: STATE_TABLE,
+                        filter: `id=eq.${STATE_ID}`
+                    },
+                    (payload) => applyControllerState(payload.new)
+                )
+                .subscribe((status) => {
+                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        console.error('Controller realtime channel status:', status);
+                    }
+                });
 
             // UI Listeners
             ctrlNames.addEventListener('input', updateControllerCount);
-            
+
             btnUpdateList.addEventListener('click', async () => {
                 const names = parseTextArea();
                 btnUpdateList.textContent = "Updating...";
+                btnUpdateList.disabled = true;
+
                 try {
-                    await setDoc(docRef, { names: names, removeWinner: ctrlRemove.checked }, { merge: true });
+                    await updateState({
+                        names,
+                        remove_winner: ctrlRemove.checked
+                    });
                     updateRigDropdown(names);
                     btnUpdateList.textContent = "Sync List to Display";
                 } catch (e) {
                     console.error("Error updating list", e);
                     btnUpdateList.textContent = "Error!";
                     setTimeout(() => btnUpdateList.textContent = "Sync List to Display", 2000);
+                } finally {
+                    btnUpdateList.disabled = false;
                 }
             });
 
             btnDismissWinner.addEventListener('click', async () => {
                 try {
-                    await setDoc(docRef, { spinState: { showWinnerModal: false } }, { merge: true });
-                } catch(e) { console.error("Error dismissing winner", e); }
+                    await updateState({ show_winner_modal: false });
+                } catch (e) {
+                    console.error("Error dismissing winner", e);
+                }
             });
 
             btnSpin.addEventListener('click', async () => {
@@ -530,10 +595,10 @@
 
                 btnSpin.disabled = true;
                 btnSpin.textContent = "SPINNING...";
-                
+
                 const riggedName = ctrlRig.value;
                 let targetIndex = -1;
-                
+
                 if (riggedName && names.includes(riggedName)) {
                     targetIndex = names.indexOf(riggedName);
                 } else {
@@ -542,25 +607,21 @@
 
                 const winnerName = names[targetIndex];
 
-                // Write spin trigger to Firebase
                 try {
-                    await setDoc(docRef, {
-                        names: names, // Ensure we are spinning with the exact current list
-                        removeWinner: ctrlRemove.checked,
-                        spinState: {
-                            timestamp: Date.now(),
-                            winnerIndex: targetIndex,
-                            winnerName: winnerName,
-                            showWinnerModal: true 
-                        }
-                    }, { merge: true });
+                    await updateState({
+                        names,
+                        remove_winner: ctrlRemove.checked,
+                        spin_timestamp: Date.now(),
+                        winner_index: targetIndex,
+                        winner_name: winnerName,
+                        show_winner_modal: true
+                    });
 
-                    // Handle Auto Remove logic on the controller side
-                    // Wait for the animation (approx 5.5s) before removing
+                    // Wait for the display animation (about 5.5s) before optionally removing the winner.
                     setTimeout(async () => {
                         btnSpin.disabled = false;
                         btnSpin.textContent = "SPIN WHEEL!";
-                        
+
                         if (ctrlRemove.checked) {
                             const currentNames = parseTextArea();
                             const idx = currentNames.indexOf(winnerName);
@@ -569,13 +630,15 @@
                                 ctrlNames.value = currentNames.join('\n');
                                 updateControllerCount();
                                 updateRigDropdown(currentNames);
-                                
-                                // Silent update of list so next spin doesn't include them
-                                await setDoc(docRef, { names: currentNames }, { merge: true });
+
+                                try {
+                                    await updateState({ names: currentNames });
+                                } catch (e) {
+                                    console.error("Error removing winner from shared list", e);
+                                }
                             }
                         }
-                        
-                        // Reset rigged dropdown if they just won
+
                         if (ctrlRig.value === winnerName) {
                             ctrlRig.value = "";
                         }
@@ -610,11 +673,17 @@
             });
         }
 
-        // Initialize App on load
+        // Initialize Supabase on load
         window.addEventListener('DOMContentLoaded', () => {
-            initFirebase();
+            initSupabase();
         });
 
+        // Clean up realtime subscriptions when the page is closed/refreshed.
+        window.addEventListener('beforeunload', () => {
+            if (displayChannel) supabase.removeChannel(displayChannel);
+            if (controllerChannel) supabase.removeChannel(controllerChannel);
+        });
     </script>
+
 </body>
 </html>
