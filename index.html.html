@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Sync Lucky Draw</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b, #0f172a);
+            color: white;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Wheel specific styles */
+        .wheel-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5));
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 50px solid #ef4444; 
+            z-index: 10;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
+
+        .center-pin {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border: 6px solid #cbd5e1;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Buttons and Utilities */
+        .btn-primary {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            transition: all 0.2s ease;
+        }
+        .btn-primary:active:not(:disabled) { transform: scale(0.95); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:active:not(:disabled) { transform: scale(0.95); }
+        .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .hidden-view { display: none !important; }
+        
+        /* Custom Scrollbar for text area */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+    </style>
+</head>
+<body>
+
+    <!-- LANDING VIEW -->
+    <div id="landing-view" class="flex flex-col items-center justify-center h-full p-6 text-center">
+        <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-2 drop-shadow-lg">LUCKY DRAW</h1>
+        <p class="text-slate-400 mb-10">Real-time Synchronized Roulette</p>
+        
+        <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
+            <button onclick="selectMode('display')" class="flex-1 glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Audience Display</h2>
+                <p class="text-slate-300 relative z-10">Show this screen on the big monitor or projector. It will react to the controller automatically.</p>
+            </button>
+
+            <button onclick="selectMode('controller')" class="flex-1 glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Backroom Controller</h2>
+                <p class="text-slate-300 relative z-10">Use this mode to secretly manage names, select winners, and trigger the spins.</p>
+            </button>
+        </div>
+        
+        <div id="auth-status" class="mt-8 text-sm text-slate-500">Connecting to real-time server...</div>
+    </div>
+
+    <!-- DISPLAY VIEW -->
+    <div id="display-view" class="hidden-view flex flex-col items-center justify-center h-full p-4">
+        <div class="text-center mb-6 z-10">
+            <h1 class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-600 drop-shadow-lg tracking-tight">
+                LUCKY DRAW
+            </h1>
+        </div>
+
+        <div class="wheel-container z-10">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="800" height="800"></canvas>
+            <div class="center-pin"></div>
+        </div>
+
+        <!-- Winner Modal (Display) -->
+        <div id="winnerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-500">
+            <div class="glass-panel p-12 rounded-3xl max-w-lg w-full mx-4 text-center transform scale-95 transition-transform duration-500 shadow-[0_0_50px_rgba(251,191,36,0.3)]" id="winnerPanel">
+                <h2 class="text-4xl font-bold text-yellow-400 mb-4 tracking-widest uppercase">Winner</h2>
+                <p id="winnerText" class="text-6xl font-extrabold text-white my-8 break-words drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"></p>
+                <p class="text-slate-300 text-sm animate-pulse">Waiting for controller...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLLER VIEW -->
+    <div id="controller-view" class="hidden-view flex flex-col h-full bg-slate-900 p-4 md:p-8 overflow-y-auto">
+        <div class="max-w-3xl w-full mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">Live Controller</h1>
+                    <p class="text-emerald-400 text-sm flex items-center gap-2 mt-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Connected & Syncing
+                    </p>
+                </div>
+                <button onclick="location.reload()" class="text-slate-400 hover:text-white text-sm bg-slate-800 px-4 py-2 rounded-lg">Change Mode</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column: Settings -->
+                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-200">Participant List</h2>
+                    
+                    <textarea id="ctrl-names" rows="8" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none font-mono text-sm leading-relaxed placeholder-slate-500" placeholder="Enter names here (one per line)"></textarea>
+                    <p class="text-xs text-slate-400 mt-2 text-right" id="ctrl-count">0 names</p>
+
+                    <div class="mt-4 pt-4 border-t border-slate-700">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Rigged Winner (Secret)</label>
+                        <select id="ctrl-rig" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500">
+                            <option value="">-- Fair Spin (Random) --</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-4 flex items-center">
+                        <input type="checkbox" id="ctrl-remove" class="w-5 h-5 text-blue-600 bg-slate-900 border-slate-600 rounded focus:ring-blue-500" checked>
+                        <label for="ctrl-remove" class="ml-3 text-sm font-medium text-slate-300">Auto-remove winner after spin completes</label>
+                    </div>
+
+                    <button id="btn-update-list" class="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors border border-slate-600">
+                        Sync List to Display
+                    </button>
+                </div>
+
+                <!-- Right Column: Actions & Status -->
+                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl flex flex-col">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-200">Actions</h2>
+                    
+                    <div class="flex-grow flex flex-col items-center justify-center bg-slate-900/50 rounded-xl border border-slate-700 p-6 mb-6">
+                        <p class="text-sm text-slate-400 mb-6 text-center">Pressing this will instantly trigger the spin on the Display mode.</p>
+                        
+                        <button id="btn-spin" class="btn-primary text-white font-bold text-3xl py-6 px-12 rounded-full w-full shadow-[0_0_20px_rgba(251,191,36,0.2)]">
+                            SPIN WHEEL!
+                        </button>
+                    </div>
+                    
+                    <div class="p-4 bg-indigo-900/30 border border-indigo-500/30 rounded-xl">
+                        <h3 class="text-sm font-medium text-indigo-300 mb-3 uppercase tracking-wider">Post-Spin Controls</h3>
+                        <button id="btn-dismiss-winner" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-xl transition-colors disabled:opacity-50">
+                            Dismiss Winner Screen on Display
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment variables injected by platform
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let firebaseConfig = {};
+        try { firebaseConfig = JSON.parse(firebaseConfigStr); } catch (e) { console.error("Invalid firebase config"); }
+
+        // Core App State
+        let currentMode = null; // 'display' or 'controller'
+        let db, auth;
+        let docRef;
+        let isFirebaseReady = false;
+
+        // Wheel State
+        let wheelNames = ["Loading..."];
+        let wheelColors = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#d946ef"];
+        let currentRotation = 0;
+        let isSpinning = false;
+        let lastSpinTimestamp = 0;
+
+        // DOM Elements - Display
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas?.getContext('2d');
+        const winnerModal = document.getElementById('winnerModal');
+        const winnerPanel = document.getElementById('winnerPanel');
+        const winnerText = document.getElementById('winnerText');
+
+        // DOM Elements - Controller
+        const ctrlNames = document.getElementById('ctrl-names');
+        const ctrlRig = document.getElementById('ctrl-rig');
+        const ctrlRemove = document.getElementById('ctrl-remove');
+        const btnUpdateList = document.getElementById('btn-update-list');
+        const btnSpin = document.getElementById('btn-spin');
+        const btnDismissWinner = document.getElementById('btn-dismiss-winner');
+        const ctrlCount = document.getElementById('ctrl-count');
+
+        async function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Strictly adhering to RULE 1 path structure for public data
+                docRef = doc(db, 'artifacts', appId, 'public', 'data', 'lucky_draw_state', 'main');
+                
+                // Initialize default state if not exists
+                const snap = await getDoc(docRef);
+                if (!snap.exists()) {
+                    await setDoc(docRef, {
+                        names: ["Alice", "Bob", "Charlie", "Diana", "Ethan", "Fiona"],
+                        removeWinner: true,
+                        spinState: { timestamp: 0, winnerIndex: -1, showWinnerModal: false }
+                    });
+                }
+
+                isFirebaseReady = true;
+                document.getElementById('auth-status').innerText = "Connected!";
+                
+                // If a mode was already selected while loading, initialize it
+                if (currentMode === 'display') initDisplay();
+                if (currentMode === 'controller') initController();
+
+            } catch (err) {
+                console.error("Firebase init failed:", err);
+                document.getElementById('auth-status').innerText = "Connection failed. Retrying in background...";
+                document.getElementById('auth-status').classList.add('text-red-500');
+            }
+        }
+
+        // Global mode selector called from HTML
+        window.selectMode = function(mode) {
+            currentMode = mode;
+            document.getElementById('landing-view').classList.add('hidden-view');
+            
+            if (mode === 'display') {
+                document.getElementById('display-view').classList.remove('hidden-view');
+                if (isFirebaseReady) initDisplay();
+            } else {
+                document.getElementById('controller-view').classList.remove('hidden-view');
+                if (isFirebaseReady) initController();
+            }
+        };
+
+        function initDisplay() {
+            // Draw initial wheel
+            drawWheel();
+
+            // Listen to real-time updates
+            onSnapshot(docRef, (docSnap) => {
+                if (!docSnap.exists()) return;
+                const data = docSnap.data();
+
+                // Only update names if we aren't currently spinning
+                // Otherwise it interrupts the visual spin
+                if (!isSpinning) {
+                    wheelNames = data.names || [];
+                    drawWheel();
+                }
+
+                // Handle Spin Trigger
+                const spinData = data.spinState || { timestamp: 0 };
+                if (spinData.timestamp > lastSpinTimestamp) {
+                    lastSpinTimestamp = spinData.timestamp;
+                    triggerSpinVisuals(spinData.winnerIndex, spinData.winnerName);
+                }
+
+                // Handle Modal State
+                if (spinData.showWinnerModal && !isSpinning) {
+                    showWinnerModal(spinData.winnerName);
+                } else if (!spinData.showWinnerModal) {
+                    hideWinnerModal();
+                }
+            }, (error) => {
+                console.error("Display sync error:", error);
+            });
+        }
+
+        function drawWheel() {
+            if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 20;
+
+            if (wheelNames.length === 0) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.fillStyle = "#334155";
+                ctx.fill();
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "bold 40px Inter";
+                ctx.textAlign = "center";
+                ctx.fillText("NO NAMES", centerX, centerY + 15);
+                return;
+            }
+
+            const sliceAngle = (Math.PI * 2) / wheelNames.length;
+
+            for (let i = 0; i < wheelNames.length; i++) {
+                const startAngle = (currentRotation * Math.PI / 180) + i * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = wheelColors[i % wheelColors.length];
+                ctx.fill();
+                
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                
+                ctx.textAlign = "right";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#ffffff";
+                
+                let fontSize = wheelNames.length > 20 ? 20 : (wheelNames.length > 12 ? 26 : 32);
+                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+
+                const textX = radius - 30;
+                ctx.fillText(wheelNames[i], textX, 0, radius - 80); 
+                ctx.restore();
+            }
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.05, 0, Math.PI * 2);
+            ctx.fillStyle = "#1e293b";
+            ctx.fill();
+        }
+
+        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+        function triggerConfetti() {
+            const duration = 4000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: wheelColors, zIndex: 100 });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: wheelColors, zIndex: 100 });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        function triggerSpinVisuals(targetIndex, winnerName) {
+            if (wheelNames.length === 0) return;
+            isSpinning = true;
+            hideWinnerModal();
+
+            // Match current local list with whatever was used to spin, just in case
+            // If length changed, it might look slightly off initially but fixes on redraw
+            const sliceAngleDeg = 360 / wheelNames.length;
+            const targetSliceCenterLocal = targetIndex * sliceAngleDeg + (sliceAngleDeg / 2);
+            
+            let requiredFinalMod = (270 - targetSliceCenterLocal) % 360;
+            if (requiredFinalMod < 0) requiredFinalMod += 360;
+
+            const extraSpins = 6 * 360;
+            const currentMod = currentRotation % 360;
+            let deltaRotation = (requiredFinalMod - currentMod);
+            if (deltaRotation < 0) deltaRotation += 360;
+            
+            const randomJitter = (Math.random() - 0.5) * (sliceAngleDeg * 0.7);
+            const targetRotation = currentRotation + deltaRotation + extraSpins + randomJitter;
+
+            const duration = 5500;
+            const startTime = performance.now();
+            const initialRotation = currentRotation;
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                let progress = elapsed / duration;
+                if (progress >= 1) progress = 1;
+
+                const easeProgress = easeOutCubic(progress);
+                currentRotation = initialRotation + (targetRotation - initialRotation) * easeProgress;
+                
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    // Trigger modal manually if firestore hasn't done it yet
+                    showWinnerModal(winnerName);
+                    triggerConfetti();
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function showWinnerModal(name) {
+            if (!name) return;
+            winnerText.textContent = name;
+            winnerModal.classList.remove('pointer-events-none');
+            winnerModal.classList.remove('opacity-0');
+            winnerPanel.classList.remove('scale-95');
+            winnerPanel.classList.add('scale-100');
+        }
+
+        function hideWinnerModal() {
+            winnerModal.classList.add('opacity-0');
+            winnerModal.classList.add('pointer-events-none');
+            winnerPanel.classList.remove('scale-100');
+            winnerPanel.classList.add('scale-95');
+        }
+
+        function initController() {
+            // Listen to real-time updates to keep controller in sync
+            onSnapshot(docRef, (docSnap) => {
+                if (!docSnap.exists()) return;
+                const data = docSnap.data();
+                
+                // Only update textarea if user isn't currently typing to avoid losing changes
+                if (document.activeElement !== ctrlNames) {
+                    ctrlNames.value = (data.names || []).join('\n');
+                    updateControllerCount();
+                    updateRigDropdown(data.names || []);
+                }
+                
+                ctrlRemove.checked = data.removeWinner === true;
+
+                // Sync UI state for buttons based on spin state
+                const spinData = data.spinState || {};
+                if (spinData.showWinnerModal) {
+                    btnDismissWinner.disabled = false;
+                    btnDismissWinner.classList.replace('bg-slate-600', 'bg-indigo-600');
+                } else {
+                    btnDismissWinner.disabled = true;
+                    btnDismissWinner.classList.replace('bg-indigo-600', 'bg-slate-600');
+                }
+            }, (error) => {
+                console.error("Controller sync error:", error);
+            });
+
+            // UI Listeners
+            ctrlNames.addEventListener('input', updateControllerCount);
+            
+            btnUpdateList.addEventListener('click', async () => {
+                const names = parseTextArea();
+                btnUpdateList.textContent = "Updating...";
+                try {
+                    await setDoc(docRef, { names: names, removeWinner: ctrlRemove.checked }, { merge: true });
+                    updateRigDropdown(names);
+                    btnUpdateList.textContent = "Sync List to Display";
+                } catch (e) {
+                    console.error("Error updating list", e);
+                    btnUpdateList.textContent = "Error!";
+                    setTimeout(() => btnUpdateList.textContent = "Sync List to Display", 2000);
+                }
+            });
+
+            btnDismissWinner.addEventListener('click', async () => {
+                try {
+                    await setDoc(docRef, { spinState: { showWinnerModal: false } }, { merge: true });
+                } catch(e) { console.error("Error dismissing winner", e); }
+            });
+
+            btnSpin.addEventListener('click', async () => {
+                const names = parseTextArea();
+                if (names.length === 0) return;
+
+                btnSpin.disabled = true;
+                btnSpin.textContent = "SPINNING...";
+                
+                const riggedName = ctrlRig.value;
+                let targetIndex = -1;
+                
+                if (riggedName && names.includes(riggedName)) {
+                    targetIndex = names.indexOf(riggedName);
+                } else {
+                    targetIndex = Math.floor(Math.random() * names.length);
+                }
+
+                const winnerName = names[targetIndex];
+
+                // Write spin trigger to Firebase
+                try {
+                    await setDoc(docRef, {
+                        names: names, // Ensure we are spinning with the exact current list
+                        removeWinner: ctrlRemove.checked,
+                        spinState: {
+                            timestamp: Date.now(),
+                            winnerIndex: targetIndex,
+                            winnerName: winnerName,
+                            showWinnerModal: true 
+                        }
+                    }, { merge: true });
+
+                    // Handle Auto Remove logic on the controller side
+                    // Wait for the animation (approx 5.5s) before removing
+                    setTimeout(async () => {
+                        btnSpin.disabled = false;
+                        btnSpin.textContent = "SPIN WHEEL!";
+                        
+                        if (ctrlRemove.checked) {
+                            const currentNames = parseTextArea();
+                            const idx = currentNames.indexOf(winnerName);
+                            if (idx > -1) {
+                                currentNames.splice(idx, 1);
+                                ctrlNames.value = currentNames.join('\n');
+                                updateControllerCount();
+                                updateRigDropdown(currentNames);
+                                
+                                // Silent update of list so next spin doesn't include them
+                                await setDoc(docRef, { names: currentNames }, { merge: true });
+                            }
+                        }
+                        
+                        // Reset rigged dropdown if they just won
+                        if (ctrlRig.value === winnerName) {
+                            ctrlRig.value = "";
+                        }
+                    }, 6000);
+
+                } catch (e) {
+                    console.error("Error triggering spin", e);
+                    btnSpin.disabled = false;
+                    btnSpin.textContent = "SPIN WHEEL!";
+                }
+            });
+        }
+
+        function parseTextArea() {
+            return ctrlNames.value.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+        }
+
+        function updateControllerCount() {
+            const count = parseTextArea().length;
+            ctrlCount.textContent = `${count} names`;
+        }
+
+        function updateRigDropdown(namesArray) {
+            const currentSelection = ctrlRig.value;
+            ctrlRig.innerHTML = '<option value="">-- Fair Spin (Random) --</option>';
+            namesArray.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                if (name === currentSelection) opt.selected = true;
+                ctrlRig.appendChild(opt);
+            });
+        }
+
+        // Initialize App on load
+        window.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+        });
+
+    </script>
+</body>
+</html>
