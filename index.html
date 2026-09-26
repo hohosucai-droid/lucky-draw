@@ -98,29 +98,47 @@
 <body>
 
     <!-- LANDING VIEW -->
-    <div id="landing-view" class="flex flex-col items-center justify-center h-full p-6 text-center">
+    <div id="landing-view" class="flex flex-col items-center justify-center h-full p-6 text-center relative">
         <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-2 drop-shadow-lg">LUCKY DRAW</h1>
         <p class="text-slate-400 mb-10">Real-time Synchronized Roulette</p>
         
-        <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
-            <button onclick="selectMode('display')" class="flex-1 glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
+        <div class="relative w-full max-w-2xl">
+            <button onclick="selectMode('display')" class="w-full glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Audience Display</h2>
-                <p class="text-slate-300 relative z-10">Show this screen on the big monitor or projector. It will react to the controller automatically.</p>
+                <p class="text-slate-300 relative z-10 max-w-md">Show this screen on the big monitor or projector. It will react to the controller automatically.</p>
             </button>
 
-            <button onclick="selectMode('controller')" class="flex-1 glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Backroom Controller</h2>
-                <p class="text-slate-300 relative z-10">Use this mode to secretly manage names, select winners, and trigger the spins.</p>
+            <button onclick="openControllerLogin()" title="Backroom Controller" class="absolute -top-3 right-4 glass-panel hover:bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center border border-white/30 shadow-lg transition-all z-20">
+                <span class="text-2xl" aria-hidden="true">⚙️</span>
             </button>
         </div>
         
         <div id="auth-status" class="mt-8 text-sm text-slate-500">Connecting to real-time server...</div>
     </div>
 
+    <!-- CONTROLLER LOGIN MODAL -->
+    <div id="controllerLoginModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-sm mx-4 rounded-3xl p-6 text-left shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-white">Controller Login</h2>
+                <button onclick="closeControllerLogin()" class="text-slate-400 hover:text-white text-xl leading-none">×</button>
+            </div>
+            <p class="text-slate-300 text-sm mb-4">Enter the password to access the backroom controller.</p>
+            <input id="controllerPasswordInput" type="password" class="w-full bg-slate-900/60 border border-slate-600 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Enter password">
+            <p id="controllerLoginError" class="text-red-400 text-sm mt-2 min-h-[20px]"></p>
+            <div class="flex gap-3 mt-4">
+                <button onclick="closeControllerLogin()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-xl">Cancel</button>
+                <button onclick="submitControllerLogin()" class="flex-1 btn-secondary text-white font-semibold py-3 px-4 rounded-xl">Login</button>
+            </div>
+        </div>
+    </div>
+
     <!-- DISPLAY VIEW -->
-    <div id="display-view" class="hidden-view flex flex-col items-center justify-center h-full p-4">
+    <div id="display-view" class="hidden-view flex flex-col items-center justify-center h-full p-4 relative">
+        <button onclick="goHome()" class="absolute top-4 left-4 z-20 bg-slate-900/70 hover:bg-slate-800 text-white text-sm px-3 py-2 rounded-lg border border-slate-700">
+            ← Back
+        </button>
         <div class="text-center mb-6 z-10">
             <h1 class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-600 drop-shadow-lg tracking-tight">
                 LUCKY DRAW
@@ -136,7 +154,7 @@
         <!-- Winner Modal (Display) -->
         <div id="winnerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-500">
             <div class="glass-panel p-12 rounded-3xl max-w-lg w-full mx-4 text-center transform scale-95 transition-transform duration-500 shadow-[0_0_50px_rgba(251,191,36,0.3)]" id="winnerPanel">
-                <h2 class="text-4xl font-bold text-yellow-400 mb-4 tracking-widest uppercase">Winner</h2>
+                <h2 id="winnerTitle" class="text-4xl font-bold text-yellow-400 mb-4">Congrats You Won</h2>
                 <p id="winnerText" class="text-6xl font-extrabold text-white my-8 break-words drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"></p>
                 <p class="text-slate-300 text-sm animate-pulse">Waiting for controller...</p>
             </div>
@@ -154,7 +172,7 @@
                         Connected & Syncing
                     </p>
                 </div>
-                <button onclick="location.reload()" class="text-slate-400 hover:text-white text-sm bg-slate-800 px-4 py-2 rounded-lg">Change Mode</button>
+                <button onclick="goHome()" class="text-slate-400 hover:text-white text-sm bg-slate-800 px-4 py-2 rounded-lg">← Back</button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -170,6 +188,12 @@
                         <select id="ctrl-rig" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500">
                             <option value="">-- Fair Spin (Random) --</option>
                         </select>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Winner Name for Effect (Optional)</label>
+                        <input id="ctrl-display-name" type="text" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Type winner name for display effect">
+                        <p class="text-xs text-slate-400 mt-2">If left empty, the winner popup will say: <span class="text-white">Congrats You Won</span>.</p>
                     </div>
 
                     <div class="mt-4 flex items-center">
@@ -212,6 +236,7 @@
         const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3muMLB8AzkBBWySV_2jWyQ_iXj0AnTF";
         const STATE_TABLE = "lucky_draw_state";
         const STATE_ID = 1;
+        const CONTROLLER_PASSWORD = "admin123";
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
@@ -236,6 +261,7 @@
         const winnerModal = document.getElementById('winnerModal');
         const winnerPanel = document.getElementById('winnerPanel');
         const winnerText = document.getElementById('winnerText');
+        const winnerTitle = document.getElementById('winnerTitle');
 
         // DOM Elements - Controller
         const ctrlNames = document.getElementById('ctrl-names');
@@ -246,6 +272,10 @@
         const btnDismissWinner = document.getElementById('btn-dismiss-winner');
         const ctrlCount = document.getElementById('ctrl-count');
         const authStatus = document.getElementById('auth-status');
+        const ctrlDisplayName = document.getElementById('ctrl-display-name');
+        const controllerLoginModal = document.getElementById('controllerLoginModal');
+        const controllerPasswordInput = document.getElementById('controllerPasswordInput');
+        const controllerLoginError = document.getElementById('controllerLoginError');
 
         function setConnectionStatus(message, ok = false) {
             if (!authStatus) return;
@@ -292,11 +322,15 @@
             }
         }
 
-        // Global mode selector called from HTML
-        window.selectMode = function(mode) {
-            currentMode = mode;
+        function hideAllViews() {
             document.getElementById('landing-view').classList.add('hidden-view');
+            document.getElementById('display-view').classList.add('hidden-view');
+            document.getElementById('controller-view').classList.add('hidden-view');
+        }
 
+        function showView(mode) {
+            currentMode = mode;
+            hideAllViews();
             if (mode === 'display') {
                 document.getElementById('display-view').classList.remove('hidden-view');
                 if (isSupabaseReady) initDisplay();
@@ -304,6 +338,46 @@
                 document.getElementById('controller-view').classList.remove('hidden-view');
                 if (isSupabaseReady) initController();
             }
+        }
+
+        // Global mode selector called from HTML
+        window.selectMode = function(mode) {
+            if (mode === 'controller') {
+                openControllerLogin();
+                return;
+            }
+            showView(mode);
+        };
+
+        window.goHome = function() {
+            currentMode = null;
+            hideAllViews();
+            closeControllerLogin();
+            document.getElementById('landing-view').classList.remove('hidden-view');
+        };
+
+        window.openControllerLogin = function() {
+            controllerLoginModal.classList.remove('pointer-events-none', 'opacity-0');
+            controllerPasswordInput.value = '';
+            controllerLoginError.textContent = '';
+            setTimeout(() => controllerPasswordInput.focus(), 50);
+        };
+
+        window.closeControllerLogin = function() {
+            controllerLoginModal.classList.add('opacity-0', 'pointer-events-none');
+            controllerLoginError.textContent = '';
+        };
+
+        window.submitControllerLogin = function() {
+            const entered = controllerPasswordInput.value;
+            if (entered !== CONTROLLER_PASSWORD) {
+                controllerLoginError.textContent = 'Wrong password. Please try again.';
+                controllerPasswordInput.focus();
+                controllerPasswordInput.select();
+                return;
+            }
+            closeControllerLogin();
+            showView('controller');
         };
 
         function handleDisplayState(data, isInitial = false) {
@@ -322,14 +396,40 @@
                 lastSpinTimestamp = timestamp;
             } else if (timestamp > lastSpinTimestamp) {
                 lastSpinTimestamp = timestamp;
-                triggerSpinVisuals(Number(data.winner_index), data.winner_name);
+                triggerSpinVisuals(Number(data.winner_index), parseWinnerPayload(data.winner_name));
             }
 
             if (data.show_winner_modal && !isSpinning) {
-                showWinnerModal(data.winner_name);
+                showWinnerModal(parseWinnerPayload(data.winner_name));
             } else if (!data.show_winner_modal) {
                 hideWinnerModal();
             }
+        }
+
+        function parseWinnerPayload(rawValue) {
+            if (!rawValue) return { prize: '', displayName: '' };
+            if (typeof rawValue === 'string') {
+                try {
+                    const parsed = JSON.parse(rawValue);
+                    if (parsed && typeof parsed === 'object' && ('prize' in parsed || 'displayName' in parsed)) {
+                        return {
+                            prize: parsed.prize || '',
+                            displayName: parsed.displayName || ''
+                        };
+                    }
+                } catch (e) {
+                    // plain text fallback
+                }
+                return { prize: rawValue, displayName: '' };
+            }
+            return { prize: '', displayName: '' };
+        }
+
+        function buildWinnerPayload(prize, displayName) {
+            return JSON.stringify({
+                prize: prize || '',
+                displayName: (displayName || '').trim()
+            });
         }
 
         async function initDisplay() {
@@ -440,7 +540,7 @@
             }());
         }
 
-        function triggerSpinVisuals(targetIndex, winnerName) {
+        function triggerSpinVisuals(targetIndex, winnerPayload) {
             if (wheelNames.length === 0) return;
             if (!Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= wheelNames.length) {
                 console.error('Invalid winner index received:', targetIndex);
@@ -482,16 +582,19 @@
                     requestAnimationFrame(animate);
                 } else {
                     isSpinning = false;
-                    showWinnerModal(winnerName);
+                    showWinnerModal(winnerPayload);
                     triggerConfetti();
                 }
             }
             requestAnimationFrame(animate);
         }
 
-        function showWinnerModal(name) {
-            if (!name) return;
-            winnerText.textContent = name;
+        function showWinnerModal(payload) {
+            const prize = payload?.prize || '';
+            const displayName = (payload?.displayName || '').trim();
+            if (!prize) return;
+            winnerTitle.textContent = `Congrats ${displayName || 'You'} Won`;
+            winnerText.textContent = prize;
             winnerModal.classList.remove('pointer-events-none');
             winnerModal.classList.remove('opacity-0');
             winnerPanel.classList.remove('scale-95');
@@ -606,6 +709,8 @@
                 }
 
                 const winnerName = names[targetIndex];
+                const effectDisplayName = (ctrlDisplayName?.value || '').trim();
+                const winnerPayload = buildWinnerPayload(winnerName, effectDisplayName);
 
                 try {
                     await updateState({
@@ -613,7 +718,7 @@
                         remove_winner: ctrlRemove.checked,
                         spin_timestamp: Date.now(),
                         winner_index: targetIndex,
-                        winner_name: winnerName,
+                        winner_name: winnerPayload,
                         show_winner_modal: true
                     });
 
@@ -672,6 +777,12 @@
                 ctrlRig.appendChild(opt);
             });
         }
+
+        controllerPasswordInput?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                submitControllerLogin();
+            }
+        });
 
         // Initialize Supabase on load
         window.addEventListener('DOMContentLoaded', () => {
