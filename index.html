@@ -1050,41 +1050,58 @@
                 const names = Array.isArray(state.names) ? state.names : [];
                 if (names.length === 0) return;
 
-                const targetIndex = Math.floor(Math.random() * names.length);
+                // The backroom controller stores the armed/rigged result in winner_index.
+                // If no valid result is armed, the front-end spin remains random.
+                const armedIndex = Number(state.winner_index);
+                const hasArmedWinner = Number.isInteger(armedIndex) && armedIndex >= 0 && armedIndex < names.length;
+                const targetIndex = hasArmedWinner ? armedIndex : Math.floor(Math.random() * names.length);
                 const winnerName = names[targetIndex];
                 const winnerPayload = buildWinnerPayload(winnerName, '');
+                const spinTimestamp = Date.now();
 
                 if (displaySpinBtn) {
                     displaySpinBtn.disabled = true;
                     displaySpinBtn.textContent = 'SPINNING...';
                 }
 
-                // Updating Supabase triggers the spin on this display and syncs the backroom controller.
+                // Updating Supabase triggers this exact result on every connected display/controller.
                 await updateState({
                     names,
                     remove_winner: state.remove_winner === true,
-                    spin_timestamp: Date.now(),
+                    spin_timestamp: spinTimestamp,
                     winner_index: targetIndex,
                     winner_name: winnerPayload,
                     show_winner_modal: true
                 });
 
-                // Match the backroom auto-remove behavior and sync the reduced list everywhere.
-                if (state.remove_winner === true) {
-                    setTimeout(async () => {
-                        try {
-                            const latest = await fetchState();
+                // After the animation, clear the armed result so the next spin is fair unless
+                // the backroom chooses another rigged winner. Auto-remove remains synchronized.
+                setTimeout(async () => {
+                    try {
+                        const latest = await fetchState();
+                        const updates = {};
+
+                        // Only clear if nobody armed a different winner during the animation.
+                        if (Number(latest.spin_timestamp) === spinTimestamp && Number(latest.winner_index) === targetIndex) {
+                            updates.winner_index = -1;
+                        }
+
+                        if (state.remove_winner === true) {
                             const latestNames = Array.isArray(latest.names) ? [...latest.names] : [];
                             const removeIndex = latestNames.indexOf(winnerName);
                             if (removeIndex > -1) {
                                 latestNames.splice(removeIndex, 1);
-                                await updateState({ names: latestNames });
+                                updates.names = latestNames;
                             }
-                        } catch (error) {
-                            console.error('Error auto-removing winner after display spin:', error);
                         }
-                    }, 6000);
-                }
+
+                        if (Object.keys(updates).length > 0) {
+                            await updateState(updates);
+                        }
+                    } catch (error) {
+                        console.error('Error finalizing display spin:', error);
+                    }
+                }, 6000);
             } catch (error) {
                 console.error('Error triggering spin from display:', error);
                 if (displaySpinBtn) {
@@ -1104,6 +1121,15 @@
                 ctrlNames.value = names.join('\n');
                 updateControllerCount();
                 updateRigDropdown(names);
+
+                // When no winner screen is active, winner_index doubles as the currently
+                // armed backroom result for a front-end spin.
+                const armedIndex = Number(data.winner_index);
+                if (!data.show_winner_modal && Number.isInteger(armedIndex) && armedIndex >= 0 && armedIndex < names.length) {
+                    ctrlRig.value = names[armedIndex];
+                } else if (!data.show_winner_modal && armedIndex === -1) {
+                    ctrlRig.value = '';
+                }
             }
 
             ctrlRemove.checked = data.remove_winner === true;
@@ -1149,15 +1175,31 @@
             // UI Listeners
             ctrlNames.addEventListener('input', updateControllerCount);
 
+            // Arm the selected result immediately so a spin started on the public wheel
+            // lands on the same result chosen in the backroom.
+            ctrlRig.addEventListener('change', async () => {
+                const names = parseTextArea();
+                const riggedName = ctrlRig.value;
+                const armedIndex = riggedName && names.includes(riggedName) ? names.indexOf(riggedName) : -1;
+                try {
+                    await updateState({ winner_index: armedIndex });
+                } catch (error) {
+                    console.error('Error syncing rigged winner selection:', error);
+                }
+            });
+
             btnUpdateList.addEventListener('click', async () => {
                 const names = parseTextArea();
                 btnUpdateList.textContent = "Updating...";
                 btnUpdateList.disabled = true;
 
                 try {
+                    const armedName = ctrlRig.value;
+                    const armedIndex = armedName && names.includes(armedName) ? names.indexOf(armedName) : -1;
                     await updateState({
                         names,
-                        remove_winner: ctrlRemove.checked
+                        remove_winner: ctrlRemove.checked,
+                        winner_index: armedIndex
                     });
                     updateRigDropdown(names);
                     btnUpdateList.textContent = "Sync List to Display";
@@ -1197,12 +1239,13 @@
                 const winnerName = names[targetIndex];
                 const effectDisplayName = (ctrlDisplayName?.value || '').trim();
                 const winnerPayload = buildWinnerPayload(winnerName, effectDisplayName);
+                const spinTimestamp = Date.now();
 
                 try {
                     await updateState({
                         names,
                         remove_winner: ctrlRemove.checked,
-                        spin_timestamp: Date.now(),
+                        spin_timestamp: spinTimestamp,
                         winner_index: targetIndex,
                         winner_name: winnerPayload,
                         show_winner_modal: true
@@ -1232,6 +1275,17 @@
 
                         if (ctrlRig.value === winnerName) {
                             ctrlRig.value = "";
+                        }
+
+                        // Clear the armed result after this spin, but do not overwrite a
+                        // different winner that may have been armed while the wheel was spinning.
+                        try {
+                            const latest = await fetchState();
+                            if (Number(latest.spin_timestamp) === spinTimestamp && Number(latest.winner_index) === targetIndex) {
+                                await updateState({ winner_index: -1 });
+                            }
+                        } catch (error) {
+                            console.error('Error clearing rigged winner after spin:', error);
                         }
                     }, 6000);
 
