@@ -98,6 +98,7 @@
             transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
         }
         .preset-card:hover { transform: translateY(-2px); }
+        .preset-card { min-height: 112px; }
         .preset-card.active {
             border-color: rgba(251,191,36,.95) !important;
             box-shadow: 0 0 0 2px rgba(251,191,36,.18), 0 12px 28px rgba(0,0,0,.22);
@@ -232,8 +233,9 @@
                 radial-gradient(ellipse at top right, rgba(243,172,198,.25) 0%, rgba(243,172,198,0) 38%);
             z-index: 0;
         }
-        .theme-jujigrainz #landing-view > *,
-        .theme-jujigrainz #display-view > :not(#display-back-btn) { position: relative; z-index: 1; }
+        .theme-jujigrainz #landing-view > * { position: relative; z-index: 1; }
+        .theme-jujigrainz #display-view > .text-center,
+        .theme-jujigrainz #display-view > .wheel-container { position: relative; z-index: 1; }
         .theme-jujigrainz #landing-view > h1,
         .theme-jujigrainz #display-title {
             background: none !important;
@@ -351,7 +353,7 @@
                 </button>
                 <button id="preset-nutrieye" onclick="setWheelPreset('nutrieye')" class="preset-card glass-panel border border-white/20 rounded-2xl p-4 text-left overflow-hidden relative">
                     <div class="absolute inset-y-0 right-0 w-24 nutrieye-preview-bg opacity-25"></div>
-                    <div class="flex items-center justify-between gap-3 relative z-10">
+                    <div class="flex items-center justify-between gap-3 relative z-10 h-full">
                         <div>
                             <div class="preset-title font-bold text-white">Nutrieye Marigold</div>
                             <div class="preset-desc text-xs text-slate-400 mt-1">Marigold · teal · cream · plum</div>
@@ -362,13 +364,12 @@
                 </button>
                 <button id="preset-jujigrainz" onclick="setWheelPreset('jujigrainz')" class="preset-card glass-panel border border-white/20 rounded-2xl p-4 text-left overflow-hidden relative">
                     <div class="absolute inset-y-0 right-0 w-28 jujigrainz-preview-bg opacity-35"></div>
-                    <div class="flex items-center justify-between gap-3 relative z-10">
+                    <div class="flex items-center justify-between gap-3 relative z-10 h-full">
                         <div>
                             <div class="preset-title font-bold text-white">Jujigrainz Rose Glow</div>
                             <div class="preset-desc text-xs text-slate-400 mt-1">Rose pink · berry red · blush · cream</div>
                         </div>
-                        <img src="./Jujigrainz_Front.png" alt="Jujigrainz" onerror="handlePresetImageError(this, './Jujigrainz_Front.jpg')" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
-                        <div class="preset-image-fallback hidden w-16 h-12 rounded-md bg-white/80 text-[11px] font-semibold text-rose-700 items-center justify-center shrink-0">Jujigrainz</div>
+                        <img src="./Jujigrainz_Front.jpg" alt="Jujigrainz" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
                     </div>
                 </button>
             </div>
