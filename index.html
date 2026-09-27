@@ -86,6 +86,26 @@
         .btn-secondary:active:not(:disabled) { transform: scale(0.95); }
         .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .display-spin-btn {
+            min-width: 320px;
+            padding: 18px 54px;
+            border-radius: 9999px;
+            border: 2px solid rgba(255,255,255,.18);
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 48%, #d97706 100%);
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            box-shadow: 0 14px 34px rgba(245,158,11,.28), inset 0 1px 0 rgba(255,255,255,.30);
+            transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+        }
+        .display-spin-btn:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.015);
+            box-shadow: 0 18px 42px rgba(245,158,11,.34), inset 0 1px 0 rgba(255,255,255,.34);
+        }
+        .display-spin-btn:active:not(:disabled) { transform: scale(.97); }
+        .display-spin-btn:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+
         .hidden-view { display: none !important; }
         
         /* Custom Scrollbar for text area */
@@ -135,6 +155,15 @@
         .theme-nutrieye #winnerTitle { color: #0f5f5c !important; }
         .theme-nutrieye #winnerText { color: #6e4a6c !important; text-shadow: none !important; }
         .theme-nutrieye #winnerWait { color: #6b7280 !important; }
+        .theme-nutrieye #display-spin-btn {
+            background: linear-gradient(135deg, #0f5f5c 0%, #19736e 55%, #2f7771 100%);
+            border-color: #e5b500;
+            color: #fffdf7;
+            box-shadow: 0 14px 34px rgba(15,95,92,.26), inset 0 1px 0 rgba(255,255,255,.24);
+        }
+        .theme-nutrieye #display-spin-btn:hover:not(:disabled) {
+            box-shadow: 0 18px 42px rgba(15,95,92,.34), 0 0 0 4px rgba(229,181,0,.12);
+        }
 
         /* Nutrieye theme readability / UI overrides */
         .theme-nutrieye #landing-view {
@@ -307,6 +336,15 @@
         .theme-jujigrainz #winnerTitle { color: #b12f53 !important; }
         .theme-jujigrainz #winnerText { color: #8d2040 !important; text-shadow: none !important; }
         .theme-jujigrainz #winnerWait { color: #9a5a70 !important; }
+        .theme-jujigrainz #display-spin-btn {
+            background: linear-gradient(135deg, #8b193d 0%, #b12f53 48%, #e65274 100%);
+            border-color: rgba(255,255,255,.72);
+            color: #fff;
+            box-shadow: 0 14px 34px rgba(177,47,83,.26), inset 0 1px 0 rgba(255,255,255,.30);
+        }
+        .theme-jujigrainz #display-spin-btn:hover:not(:disabled) {
+            box-shadow: 0 18px 42px rgba(177,47,83,.34), 0 0 0 4px rgba(230,82,116,.10);
+        }
         .theme-jujigrainz #controllerLoginModal .glass-panel {
             background: rgba(255,248,251,.98) !important;
             border-color: rgba(177,47,83,.12) !important;
@@ -422,6 +460,10 @@
             <div class="pointer"></div>
             <canvas id="wheelCanvas" width="800" height="800"></canvas>
             <div class="center-pin"></div>
+        </div>
+
+        <div id="display-spin-wrap" class="z-10 mt-5 flex justify-center">
+            <button id="display-spin-btn" class="display-spin-btn" type="button">SPIN THE WHEEL</button>
         </div>
 
         <!-- Winner Modal (Display) -->
@@ -562,6 +604,7 @@
         const winnerPanel = document.getElementById('winnerPanel');
         const winnerText = document.getElementById('winnerText');
         const winnerTitle = document.getElementById('winnerTitle');
+        const displaySpinBtn = document.getElementById('display-spin-btn');
 
         // DOM Elements - Controller
         const ctrlNames = document.getElementById('ctrl-names');
@@ -714,6 +757,9 @@
             if (!isSpinning) {
                 wheelNames = Array.isArray(data.names) ? data.names : [];
                 drawWheel();
+            }
+            if (displaySpinBtn) {
+                displaySpinBtn.disabled = isSpinning || wheelNames.length === 0;
             }
 
             const timestamp = Number(data.spin_timestamp || 0);
@@ -918,6 +964,10 @@
             }
 
             isSpinning = true;
+            if (displaySpinBtn) {
+                displaySpinBtn.disabled = true;
+                displaySpinBtn.textContent = 'SPINNING...';
+            }
             hideWinnerModal();
 
             const sliceAngleDeg = 360 / wheelNames.length;
@@ -952,6 +1002,10 @@
                     requestAnimationFrame(animate);
                 } else {
                     isSpinning = false;
+                    if (displaySpinBtn) {
+                        displaySpinBtn.disabled = wheelNames.length === 0;
+                        displaySpinBtn.textContent = 'SPIN THE WHEEL';
+                    }
                     showWinnerModal(winnerPayload);
                     triggerConfetti();
                 }
@@ -976,6 +1030,68 @@
             winnerModal.classList.add('pointer-events-none');
             winnerPanel.classList.remove('scale-100');
             winnerPanel.classList.add('scale-95');
+        }
+
+        async function dismissWinnerFromDisplay() {
+            // Hide immediately for a responsive front-end experience, then sync the state.
+            hideWinnerModal();
+            try {
+                await updateState({ show_winner_modal: false });
+            } catch (error) {
+                console.error('Error syncing winner dismissal from display:', error);
+            }
+        }
+
+        async function triggerSpinFromDisplay() {
+            if (!isSupabaseReady || isSpinning) return;
+
+            try {
+                const state = await fetchState();
+                const names = Array.isArray(state.names) ? state.names : [];
+                if (names.length === 0) return;
+
+                const targetIndex = Math.floor(Math.random() * names.length);
+                const winnerName = names[targetIndex];
+                const winnerPayload = buildWinnerPayload(winnerName, '');
+
+                if (displaySpinBtn) {
+                    displaySpinBtn.disabled = true;
+                    displaySpinBtn.textContent = 'SPINNING...';
+                }
+
+                // Updating Supabase triggers the spin on this display and syncs the backroom controller.
+                await updateState({
+                    names,
+                    remove_winner: state.remove_winner === true,
+                    spin_timestamp: Date.now(),
+                    winner_index: targetIndex,
+                    winner_name: winnerPayload,
+                    show_winner_modal: true
+                });
+
+                // Match the backroom auto-remove behavior and sync the reduced list everywhere.
+                if (state.remove_winner === true) {
+                    setTimeout(async () => {
+                        try {
+                            const latest = await fetchState();
+                            const latestNames = Array.isArray(latest.names) ? [...latest.names] : [];
+                            const removeIndex = latestNames.indexOf(winnerName);
+                            if (removeIndex > -1) {
+                                latestNames.splice(removeIndex, 1);
+                                await updateState({ names: latestNames });
+                            }
+                        } catch (error) {
+                            console.error('Error auto-removing winner after display spin:', error);
+                        }
+                    }, 6000);
+                }
+            } catch (error) {
+                console.error('Error triggering spin from display:', error);
+                if (displaySpinBtn) {
+                    displaySpinBtn.disabled = wheelNames.length === 0;
+                    displaySpinBtn.textContent = 'SPIN THE WHEEL';
+                }
+            }
         }
 
         function applyControllerState(data) {
@@ -1154,9 +1270,19 @@
             }
         });
 
+        displaySpinBtn?.addEventListener('click', triggerSpinFromDisplay);
+
+        winnerModal?.addEventListener('click', (event) => {
+            // Only dismiss when the user clicks the dark area outside the winner card.
+            if (event.target === winnerModal) {
+                dismissWinnerFromDisplay();
+            }
+        });
+
         // Initialize Supabase on load
         window.addEventListener('DOMContentLoaded', () => {
             applyWheelPreset(activePreset);
+            if (displaySpinBtn) displaySpinBtn.disabled = true;
             initSupabase();
         });
 
