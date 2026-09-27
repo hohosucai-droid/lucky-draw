@@ -107,6 +107,10 @@
         .nutrieye-preview-bg {
             background: linear-gradient(135deg, #fffaf0 0%, #f4df9a 48%, #e5b500 72%, #6e4a6c 100%);
         }
+        .jujigrainz-preview-bg {
+            background: linear-gradient(135deg, #fff7fb 0%, #ffd8e6 35%, #f5a3be 62%, #a61f40 100%);
+        }
+
         .theme-nutrieye {
             background: radial-gradient(circle at center, #fffdf7 0%, #f7edc8 48%, #264f4b 100%) !important;
         }
@@ -191,6 +195,119 @@
             color: #123f3c !important;
             border-color: rgba(15,95,92,.25) !important;
         }
+    
+        .theme-jujigrainz {
+            background: linear-gradient(180deg, #fff8fb 0%, #fde6ef 36%, #f7d3e1 68%, #f4cadb 100%) !important;
+            color: #7f1734 !important;
+        }
+        .theme-jujigrainz #landing-view {
+            background:
+                radial-gradient(circle at 50% 20%, rgba(255,255,255,.98) 0%, rgba(255,245,249,.96) 30%, rgba(252,226,237,.96) 72%, rgba(247,207,222,.98) 100%),
+                linear-gradient(180deg, #fff8fb 0%, #fbe3ed 100%);
+            color: #7f1734;
+        }
+        .theme-jujigrainz #landing-view::before,
+        .theme-jujigrainz #display-view::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 10% 12%, rgba(255,255,255,.55) 0 10px, transparent 11px),
+                radial-gradient(circle at 11% 18%, rgba(255,255,255,.48) 0 8px, transparent 9px),
+                radial-gradient(circle at 90% 12%, rgba(255,255,255,.55) 0 10px, transparent 11px),
+                radial-gradient(circle at 92% 18%, rgba(255,255,255,.40) 0 8px, transparent 9px),
+                linear-gradient(150deg, transparent 70%, rgba(244,185,205,.28) 82%, rgba(244,185,205,.18) 100%),
+                linear-gradient(20deg, transparent 72%, rgba(255,255,255,.6) 82%, transparent 84%);
+            z-index: 0;
+        }
+        .theme-jujigrainz #landing-view::after,
+        .theme-jujigrainz #display-view::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at bottom left, rgba(248,189,210,.35) 0%, rgba(248,189,210,0) 40%),
+                radial-gradient(ellipse at top right, rgba(243,172,198,.25) 0%, rgba(243,172,198,0) 38%);
+            z-index: 0;
+        }
+        .theme-jujigrainz #landing-view > *,
+        .theme-jujigrainz #display-view > * { position: relative; z-index: 1; }
+        .theme-jujigrainz #landing-view > h1,
+        .theme-jujigrainz #display-title {
+            background: none !important;
+            color: #b12f53 !important;
+            -webkit-text-fill-color: #b12f53 !important;
+            text-shadow: 0 3px 0 rgba(255,255,255,.65), 0 14px 28px rgba(177,47,83,.16);
+        }
+        .theme-jujigrainz #landing-view > p,
+        .theme-jujigrainz #display-subtitle,
+        .theme-jujigrainz #landing-view .preset-label { color: #9a5a70 !important; }
+        .theme-jujigrainz #landing-view .preset-heading { color: #7f1734 !important; }
+        .theme-jujigrainz #landing-view .preset-card {
+            background: rgba(255,255,255,.78) !important;
+            border-color: rgba(177,47,83,.12) !important;
+            box-shadow: 0 8px 24px rgba(184,89,121,.12);
+        }
+        .theme-jujigrainz #landing-view .preset-card .preset-title { color: #8d2040 !important; }
+        .theme-jujigrainz #landing-view .preset-card .preset-desc { color: #9a5a70 !important; }
+        .theme-jujigrainz #landing-view .preset-card.active {
+            background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,236,243,.96)) !important;
+            border-color: #d86d95 !important;
+            box-shadow: 0 0 0 2px rgba(216,109,149,.18), 0 16px 34px rgba(184,89,121,.16);
+        }
+        .theme-jujigrainz #audience-card {
+            background: rgba(255,255,255,.78) !important;
+            border-color: rgba(177,47,83,.10) !important;
+            box-shadow: 0 18px 40px rgba(184,89,121,.12);
+        }
+        .theme-jujigrainz #audience-card h2 { color: #8d2040 !important; }
+        .theme-jujigrainz #controller-gear {
+            background: rgba(255,255,255,.9) !important;
+            border-color: rgba(177,47,83,.14) !important;
+            color: #b12f53 !important;
+            box-shadow: 0 10px 20px rgba(177,47,83,.14);
+        }
+        .theme-jujigrainz #preset-status,
+        .theme-jujigrainz #auth-status.text-emerald-400 { color: #b12f53 !important; }
+        .theme-jujigrainz #display-view {
+            background:
+                radial-gradient(circle at 50% 20%, rgba(255,255,255,.98) 0%, rgba(255,247,250,.97) 30%, rgba(252,230,237,.96) 72%, rgba(247,207,222,.98) 100%),
+                linear-gradient(180deg, #fff8fb 0%, #fbe3ed 100%);
+        }
+        .theme-jujigrainz .pointer { border-top-color: #e65274; }
+        .theme-jujigrainz .center-pin {
+            background: radial-gradient(circle at 35% 35%, #fff 0%, #ffeaf1 35%, #f5a3be 78%, #b12f53 100%);
+            border-color: #fff1f5;
+            box-shadow: inset 0 2px 4px rgba(127,23,52,.18), 0 4px 10px rgba(177,47,83,.28);
+        }
+        .theme-jujigrainz #display-view > button {
+            background: rgba(177,47,83,.9) !important;
+            border-color: rgba(255,255,255,.42) !important;
+            color: white !important;
+        }
+        .theme-jujigrainz #winnerPanel {
+            background: rgba(255,250,252,.94);
+            border-color: rgba(177,47,83,.18);
+            color: #7f1734;
+            box-shadow: 0 18px 40px rgba(177,47,83,.16);
+        }
+        .theme-jujigrainz #winnerTitle { color: #b12f53 !important; }
+        .theme-jujigrainz #winnerText { color: #8d2040 !important; text-shadow: none !important; }
+        .theme-jujigrainz #winnerWait { color: #9a5a70 !important; }
+        .theme-jujigrainz #controllerLoginModal .glass-panel {
+            background: rgba(255,248,251,.98) !important;
+            border-color: rgba(177,47,83,.12) !important;
+        }
+        .theme-jujigrainz #controllerLoginModal h2 { color: #8d2040 !important; }
+        .theme-jujigrainz #controllerLoginModal p { color: #9a5a70 !important; }
+        .theme-jujigrainz #controllerLoginModal input {
+            background: white !important;
+            color: #7f1734 !important;
+            border-color: rgba(177,47,83,.16) !important;
+        }
+
     </style>
 </head>
 <body>
@@ -208,7 +325,7 @@
                 </div>
                 <span id="preset-status" class="text-xs text-emerald-400">Classic Night selected</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button id="preset-classic" onclick="setWheelPreset('classic')" class="preset-card active glass-panel border border-white/20 rounded-2xl p-4 text-left">
                     <div class="flex items-center justify-between gap-3">
                         <div>
@@ -233,14 +350,23 @@
                         <img src="./Nutrieye_Front.png" alt="Nutrieye" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
                     </div>
                 </button>
+                <button id="preset-jujigrainz" onclick="setWheelPreset('jujigrainz')" class="preset-card glass-panel border border-white/20 rounded-2xl p-4 text-left overflow-hidden relative">
+                    <div class="absolute inset-y-0 right-0 w-28 jujigrainz-preview-bg opacity-35"></div>
+                    <div class="flex items-center justify-between gap-3 relative z-10">
+                        <div>
+                            <div class="preset-title font-bold text-white">Jujigrainz Rose Glow</div>
+                            <div class="preset-desc text-xs text-slate-400 mt-1">Rose pink · berry red · blush · cream</div>
+                        </div>
+                        <img src="./Jujigrainz_Front.png" alt="Jujigrainz" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
+                    </div>
+                </button>
             </div>
         </div>
         
         <div class="relative w-full max-w-2xl">
             <button id="audience-card" onclick="selectMode('display')" class="w-full glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Audience Display</h2>
-                <p class="text-slate-300 relative z-10 max-w-md">Show this screen on the big monitor or projector. It will react to the controller automatically.</p>
+                <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Start Lucky Draw</h2>
             </button>
 
             <button id="controller-gear" onclick="openControllerLogin()" title="Backroom Controller" class="absolute -top-3 right-4 glass-panel hover:bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center border border-white/30 shadow-lg transition-all z-20">
@@ -390,13 +516,25 @@
                 name: 'Classic Night',
                 colors: ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#d946ef"],
                 title: 'LUCKY DRAW',
-                subtitle: 'Real-time synchronized roulette'
+                subtitle: 'Real-time synchronized roulette',
+                emptyBg: '#334155',
+                emptyText: '#94a3b8'
             },
             nutrieye: {
                 name: 'Nutrieye Marigold',
                 colors: ["#e5b500", "#0f5f5c", "#f4df9a", "#6e4a6c", "#d99f00", "#2f7771", "#fff4cf", "#9c7699"],
                 title: 'NUTRIEYE LUCKY DRAW',
-                subtitle: 'Spin for a Bright Surprise'
+                subtitle: 'Spin for a Bright Surprise',
+                emptyBg: '#f4df9a',
+                emptyText: '#0f5f5c'
+            },
+            jujigrainz: {
+                name: 'Jujigrainz Rose Glow',
+                colors: ["#ab274f", "#d7587d", "#f2b7c9", "#fff4f7", "#cf8c28", "#8b193d", "#f7d5e1", "#f07ea2"],
+                title: 'JUJIGRAINZ LUCKY DRAW',
+                subtitle: 'Spin for a Nourishing Surprise',
+                emptyBg: '#f7d5e1',
+                emptyText: '#8b193d'
             }
         };
         let activePreset = localStorage.getItem('wheelPreset') || 'classic';
@@ -429,6 +567,7 @@
         const presetStatus = document.getElementById('preset-status');
         const presetClassic = document.getElementById('preset-classic');
         const presetNutrieye = document.getElementById('preset-nutrieye');
+        const presetJujigrainz = document.getElementById('preset-jujigrainz');
         const displayTitle = document.getElementById('display-title');
         const displaySubtitle = document.getElementById('display-subtitle');
 
@@ -436,13 +575,16 @@
             const preset = PRESETS[presetKey] || PRESETS.classic;
             activePreset = presetKey in PRESETS ? presetKey : 'classic';
             wheelColors = [...preset.colors];
-            document.body.classList.toggle('theme-nutrieye', activePreset === 'nutrieye');
+            document.body.classList.remove('theme-nutrieye', 'theme-jujigrainz');
+            if (activePreset === 'nutrieye') document.body.classList.add('theme-nutrieye');
+            if (activePreset === 'jujigrainz') document.body.classList.add('theme-jujigrainz');
             if (displayTitle) displayTitle.textContent = preset.title;
             if (displaySubtitle) displaySubtitle.textContent = preset.subtitle;
             if (presetStatus) presetStatus.textContent = `${preset.name} selected`;
             presetClassic?.classList.toggle('active', activePreset === 'classic');
             presetNutrieye?.classList.toggle('active', activePreset === 'nutrieye');
-            if (currentMode === 'display') drawWheel();
+            presetJujigrainz?.classList.toggle('active', activePreset === 'jujigrainz');
+            drawWheel();
         }
 
         window.setWheelPreset = function(presetKey) {
@@ -648,9 +790,9 @@
             if (wheelNames.length === 0) {
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                ctx.fillStyle = "#334155";
+                ctx.fillStyle = PRESETS[activePreset]?.emptyBg || '#334155';
                 ctx.fill();
-                ctx.fillStyle = "#94a3b8";
+                ctx.fillStyle = PRESETS[activePreset]?.emptyText || '#94a3b8';
                 ctx.font = "bold 40px Inter";
                 ctx.textAlign = "center";
                 ctx.fillText("NO NAMES", centerX, centerY + 15);
@@ -669,8 +811,9 @@
                 ctx.fillStyle = wheelColors[i % wheelColors.length];
                 ctx.fill();
 
-                ctx.lineWidth = activePreset === 'nutrieye' ? 5 : 4;
-                ctx.strokeStyle = activePreset === 'nutrieye' ? "rgba(255,255,255,0.58)" : "rgba(0,0,0,0.2)";
+                const isPremiumWheel = activePreset === 'nutrieye' || activePreset === 'jujigrainz';
+                ctx.lineWidth = isPremiumWheel ? 5 : 4;
+                ctx.strokeStyle = isPremiumWheel ? "rgba(255,255,255,0.62)" : "rgba(0,0,0,0.22)";
                 ctx.stroke();
 
                 ctx.save();
@@ -679,10 +822,13 @@
 
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
+                const sliceColor = wheelColors[i % wheelColors.length].toLowerCase();
                 if (activePreset === 'nutrieye') {
-                    const sliceColor = wheelColors[i % wheelColors.length].toLowerCase();
                     const lightSlices = ['#f4df9a', '#fff4cf'];
                     ctx.fillStyle = lightSlices.includes(sliceColor) ? '#0f5f5c' : '#ffffff';
+                } else if (activePreset === 'jujigrainz') {
+                    const lightSlices = ['#f2b7c9', '#fff4f7', '#f7d5e1'];
+                    ctx.fillStyle = lightSlices.includes(sliceColor) ? '#8b193d' : '#ffffff';
                 } else {
                     ctx.fillStyle = "#ffffff";
                 }
@@ -690,8 +836,8 @@
                 let fontSize = wheelNames.length > 20 ? 20 : (wheelNames.length > 12 ? 26 : 32);
                 ctx.font = `bold ${fontSize}px Inter, sans-serif`;
 
-                ctx.shadowColor = activePreset === 'nutrieye' ? "rgba(15,95,92,0.28)" : "rgba(0,0,0,0.5)";
-                ctx.shadowBlur = activePreset === 'nutrieye' ? 2 : 4;
+                ctx.shadowColor = activePreset === 'nutrieye' ? "rgba(15,95,92,0.28)" : (activePreset === 'jujigrainz' ? "rgba(139,25,61,0.20)" : "rgba(0,0,0,0.5)");
+                ctx.shadowBlur = activePreset === 'classic' ? 4 : 2;
                 ctx.shadowOffsetX = 1;
                 ctx.shadowOffsetY = 1;
 
@@ -711,15 +857,30 @@
                 ctx.lineWidth = 4;
                 ctx.strokeStyle = '#e5b500';
                 ctx.stroke();
+            } else if (activePreset === 'jujigrainz') {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius - 2, 0, Math.PI * 2);
+                ctx.lineWidth = 14;
+                ctx.strokeStyle = '#b12f53';
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius - 12, 0, Math.PI * 2);
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = '#f6d0dc';
+                ctx.stroke();
             }
 
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.05, 0, Math.PI * 2);
-            ctx.fillStyle = activePreset === 'nutrieye' ? "#fff4cf" : "#1e293b";
+            ctx.fillStyle = activePreset === 'nutrieye' ? "#fff4cf" : (activePreset === 'jujigrainz' ? "#fff7fb" : "#1e293b");
             ctx.fill();
             if (activePreset === 'nutrieye') {
                 ctx.lineWidth = 7;
                 ctx.strokeStyle = '#0f5f5c';
+                ctx.stroke();
+            } else if (activePreset === 'jujigrainz') {
+                ctx.lineWidth = 7;
+                ctx.strokeStyle = '#b12f53';
                 ctx.stroke();
             }
         }
