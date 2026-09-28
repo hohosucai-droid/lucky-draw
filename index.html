@@ -3,1349 +3,4852 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Live Sync Lucky Draw</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"
+    ></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+        rel="stylesheet"
+    >
+
     <style>
+
+        /* =========================================================
+           BASE
+        ========================================================= */
+
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at center, #1e1b4b, #0f172a);
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    #1e1b4b,
+                    #0f172a
+                );
+
             color: white;
+
             overflow: hidden;
+
             margin: 0;
             padding: 0;
+
             height: 100vh;
             width: 100vw;
         }
-        
+
         .glass-panel {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background:
+                rgba(255, 255, 255, 0.10);
+
+            backdrop-filter:
+                blur(10px);
+
+            -webkit-backdrop-filter:
+                blur(10px);
+
+            border:
+                1px solid
+                rgba(255,255,255,0.20);
         }
 
-        /* Wheel specific styles */
+        .hidden-view {
+            display:
+                none !important;
+        }
+
+
+        /* =========================================================
+           WHEEL
+        ========================================================= */
+
         .wheel-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            aspect-ratio: 1/1;
-            margin: 0 auto;
-            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5));
+            position:
+                relative;
+
+            width:
+                100%;
+
+            max-width:
+                600px;
+
+            aspect-ratio:
+                1 / 1;
+
+            margin:
+                0 auto;
+
+            filter:
+                drop-shadow(
+                    0 20px 30px
+                    rgba(0,0,0,0.5)
+                );
         }
 
         canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            display: block;
+            width:
+                100%;
+
+            height:
+                100%;
+
+            border-radius:
+                50%;
+
+            display:
+                block;
         }
 
         .pointer {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0; 
-            height: 0; 
-            border-left: 25px solid transparent;
-            border-right: 25px solid transparent;
-            border-top: 50px solid #ef4444; 
-            z-index: 10;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+            position:
+                absolute;
+
+            top:
+                -20px;
+
+            left:
+                50%;
+
+            transform:
+                translateX(-50%);
+
+            width:
+                0;
+
+            height:
+                0;
+
+            border-left:
+                25px solid transparent;
+
+            border-right:
+                25px solid transparent;
+
+            border-top:
+                50px solid #ef4444;
+
+            z-index:
+                10;
+
+            filter:
+                drop-shadow(
+                    0 4px 6px
+                    rgba(0,0,0,.4)
+                );
         }
 
         .center-pin {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            background: #fff;
-            border: 6px solid #cbd5e1;
-            border-radius: 50%;
-            z-index: 5;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 10px rgba(0,0,0,0.5);
+            position:
+                absolute;
+
+            top:
+                50%;
+
+            left:
+                50%;
+
+            transform:
+                translate(-50%, -50%);
+
+            width:
+                40px;
+
+            height:
+                40px;
+
+            background:
+                #ffffff;
+
+            border:
+                6px solid #cbd5e1;
+
+            border-radius:
+                50%;
+
+            z-index:
+                5;
+
+            box-shadow:
+                inset 0 2px 4px
+                rgba(0,0,0,.3),
+
+                0 4px 10px
+                rgba(0,0,0,.5);
         }
 
-        /* Buttons and Utilities */
+
+        /* =========================================================
+           BUTTONS
+        ========================================================= */
+
         .btn-primary {
-            background: linear-gradient(135deg, #fbbf24, #d97706);
-            transition: all 0.2s ease;
+            background:
+                linear-gradient(
+                    135deg,
+                    #fbbf24,
+                    #d97706
+                );
+
+            transition:
+                all .2s ease;
         }
-        .btn-primary:active:not(:disabled) { transform: scale(0.95); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary:active:not(:disabled) {
+            transform:
+                scale(.95);
+        }
+
+        .btn-primary:disabled {
+            opacity:
+                .5;
+
+            cursor:
+                not-allowed;
+        }
+
 
         .btn-secondary {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            transition: all 0.2s ease;
+            background:
+                linear-gradient(
+                    135deg,
+                    #3b82f6,
+                    #2563eb
+                );
+
+            transition:
+                all .2s ease;
         }
-        .btn-secondary:active:not(:disabled) { transform: scale(0.95); }
-        .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
 
         .display-spin-btn {
-            min-width: 320px;
-            padding: 18px 54px;
-            border-radius: 9999px;
-            border: 2px solid rgba(255,255,255,.18);
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 48%, #d97706 100%);
-            color: #fff;
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: .04em;
-            box-shadow: 0 14px 34px rgba(245,158,11,.28), inset 0 1px 0 rgba(255,255,255,.30);
-            transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
-        }
-        .display-spin-btn:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.015);
-            box-shadow: 0 18px 42px rgba(245,158,11,.34), inset 0 1px 0 rgba(255,255,255,.34);
-        }
-        .display-spin-btn:active:not(:disabled) { transform: scale(.97); }
-        .display-spin-btn:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+            min-width:
+                320px;
 
-        .hidden-view { display: none !important; }
-        
-        /* Custom Scrollbar for text area */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+            padding:
+                18px 54px;
+
+            border-radius:
+                9999px;
+
+            border:
+                2px solid
+                rgba(255,255,255,.18);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fbbf24 0%,
+                    #f59e0b 48%,
+                    #d97706 100%
+                );
+
+            color:
+                white;
+
+            font-size:
+                1.5rem;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                .04em;
+
+            box-shadow:
+                0 14px 34px
+                rgba(245,158,11,.28),
+
+                inset 0 1px 0
+                rgba(255,255,255,.30);
+
+            transition:
+                all .18s ease;
+        }
+
+        .display-spin-btn:hover:not(:disabled) {
+            transform:
+                translateY(-2px)
+                scale(1.015);
+        }
+
+        .display-spin-btn:disabled {
+            opacity:
+                .48;
+
+            cursor:
+                not-allowed;
+
+            transform:
+                none;
+        }
+
+
+        /* =========================================================
+           PRESET CARDS
+        ========================================================= */
 
         .preset-card {
-            transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+            min-height:
+                112px;
+
+            transition:
+                transform .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
         }
-        .preset-card:hover { transform: translateY(-2px); }
-        .preset-card { min-height: 112px; }
+
+        .preset-card:hover {
+            transform:
+                translateY(-2px);
+        }
+
         .preset-card.active {
-            border-color: rgba(251,191,36,.95) !important;
-            box-shadow: 0 0 0 2px rgba(251,191,36,.18), 0 12px 28px rgba(0,0,0,.22);
-            background: rgba(255,255,255,.14);
+            border-color:
+                rgba(251,191,36,.95)
+                !important;
+
+            box-shadow:
+                0 0 0 2px
+                rgba(251,191,36,.18),
+
+                0 12px 28px
+                rgba(0,0,0,.22);
+
+            background:
+                rgba(255,255,255,.14);
         }
-        .preset-dot { width: 14px; height: 14px; border-radius: 9999px; display: inline-block; }
+
+        .preset-dot {
+            width:
+                14px;
+
+            height:
+                14px;
+
+            border-radius:
+                9999px;
+
+            display:
+                inline-block;
+        }
+
         .nutrieye-preview-bg {
-            background: linear-gradient(135deg, #fffaf0 0%, #f4df9a 48%, #e5b500 72%, #6e4a6c 100%);
+            background:
+                linear-gradient(
+                    135deg,
+                    #fffaf0 0%,
+                    #f4df9a 48%,
+                    #e5b500 72%,
+                    #6e4a6c 100%
+                );
         }
+
         .jujigrainz-preview-bg {
-            background: linear-gradient(135deg, #fff7fb 0%, #ffd8e6 35%, #f5a3be 62%, #a61f40 100%);
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff7fb 0%,
+                    #ffd8e6 35%,
+                    #f5a3be 62%,
+                    #a61f40 100%
+                );
         }
+
+
+        /* =========================================================
+           NUTRIEYE
+        ========================================================= */
 
         .theme-nutrieye {
-            background: radial-gradient(circle at center, #fffdf7 0%, #f7edc8 48%, #264f4b 100%) !important;
-        }
-        .theme-nutrieye #display-title {
-            background: none !important;
-            color: #0f5f5c !important;
-            -webkit-text-fill-color: #0f5f5c;
-            text-shadow: 0 3px 0 rgba(255,255,255,.6), 0 12px 30px rgba(229,181,0,.28);
-        }
-        .theme-nutrieye #display-subtitle { color: #6e4a6c !important; }
-        .theme-nutrieye .pointer { border-top-color: #6e4a6c; }
-        .theme-nutrieye .center-pin {
-            background: radial-gradient(circle at 35% 35%, #fff7c7 0%, #f6ce55 32%, #e5b500 72%, #b88100 100%);
-            border-color: #0f5f5c;
-        }
-        .theme-nutrieye #winnerPanel {
-            background: rgba(255,250,235,.92);
-            border-color: rgba(15,95,92,.22);
-            color: #133d3b;
-        }
-        .theme-nutrieye #winnerTitle { color: #0f5f5c !important; }
-        .theme-nutrieye #winnerText { color: #6e4a6c !important; text-shadow: none !important; }
-        .theme-nutrieye #winnerWait { color: #6b7280 !important; }
-        .theme-nutrieye #display-spin-btn {
-            background: linear-gradient(135deg, #0f5f5c 0%, #19736e 55%, #2f7771 100%);
-            border-color: #e5b500;
-            color: #fffdf7;
-            box-shadow: 0 14px 34px rgba(15,95,92,.26), inset 0 1px 0 rgba(255,255,255,.24);
-        }
-        .theme-nutrieye #display-spin-btn:hover:not(:disabled) {
-            box-shadow: 0 18px 42px rgba(15,95,92,.34), 0 0 0 4px rgba(229,181,0,.12);
+            background:
+                radial-gradient(
+                    circle at center,
+                    #fffdf7 0%,
+                    #f7edc8 48%,
+                    #264f4b 100%
+                ) !important;
         }
 
-        /* Nutrieye theme readability / UI overrides */
         .theme-nutrieye #landing-view {
             background:
-                radial-gradient(circle at 50% 18%, rgba(255,255,255,.96) 0%, rgba(255,250,235,.92) 28%, rgba(247,237,200,.92) 68%, rgba(235,221,164,.96) 100%);
-            color: #123f3c;
+                radial-gradient(
+                    circle at 50% 18%,
+                    #ffffff 0%,
+                    #fffaf0 30%,
+                    #f7edc8 70%,
+                    #eadca5 100%
+                );
+
+            color:
+                #123f3c;
         }
+
         .theme-nutrieye #landing-view > h1 {
-            background: none !important;
-            color: #d99f00 !important;
-            -webkit-text-fill-color: #d99f00 !important;
-            text-shadow: 0 3px 0 rgba(255,255,255,.7), 0 10px 24px rgba(110,74,108,.12);
+            background:
+                none !important;
+
+            color:
+                #d99f00 !important;
+
+            -webkit-text-fill-color:
+                #d99f00 !important;
         }
-        .theme-nutrieye #landing-view > p { color: #6e4a6c !important; }
-        .theme-nutrieye #landing-view .preset-label { color: #6e4a6c !important; }
-        .theme-nutrieye #landing-view .preset-heading { color: #0f5f5c !important; }
-        .theme-nutrieye #landing-view .preset-card {
-            background: rgba(255,255,255,.78) !important;
-            border-color: rgba(15,95,92,.18) !important;
-            box-shadow: 0 6px 20px rgba(95,72,31,.08);
+
+        .theme-nutrieye
+        #landing-view > p {
+            color:
+                #6e4a6c;
         }
-        .theme-nutrieye #landing-view .preset-card .preset-title { color: #0f5f5c !important; }
-        .theme-nutrieye #landing-view .preset-card .preset-desc { color: #6b7280 !important; }
-        .theme-nutrieye #landing-view .preset-card.active {
-            background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,248,222,.96)) !important;
-            border-color: #d99f00 !important;
-            box-shadow: 0 0 0 2px rgba(217,159,0,.14), 0 14px 34px rgba(110,74,108,.14);
+
+        .theme-nutrieye
+        .preset-heading {
+            color:
+                #0f5f5c !important;
         }
-        .theme-nutrieye #audience-card {
-            background: rgba(255,255,255,.84) !important;
-            border-color: rgba(15,95,92,.20) !important;
-            box-shadow: 0 16px 36px rgba(110,74,108,.10);
+
+        .theme-nutrieye
+        .preset-label {
+            color:
+                #6e4a6c !important;
         }
-        .theme-nutrieye #audience-card h2 { color: #0f5f5c !important; }
-        .theme-nutrieye #audience-card p { color: #5f6668 !important; }
-        .theme-nutrieye #controller-gear {
-            background: #fffaf0 !important;
-            border-color: rgba(110,74,108,.22) !important;
-            color: #6e4a6c !important;
+
+        .theme-nutrieye
+        .preset-card {
+            background:
+                rgba(255,255,255,.80);
+
+            border-color:
+                rgba(15,95,92,.18)
+                !important;
         }
-        .theme-nutrieye #preset-status { color: #0f8f78 !important; }
-        .theme-nutrieye #auth-status.text-emerald-400 { color: #0f8f78 !important; }
-        .theme-nutrieye #display-view {
-            background: radial-gradient(circle at 50% 28%, #fffdf7 0%, #f7edc8 52%, #e9dba7 100%);
+
+        .theme-nutrieye
+        .preset-title {
+            color:
+                #0f5f5c !important;
         }
-        .theme-nutrieye #display-view > button {
-            background: rgba(15,95,92,.92) !important;
-            border-color: rgba(255,255,255,.38) !important;
-            color: white !important;
+
+        .theme-nutrieye
+        .preset-desc {
+            color:
+                #6b7280 !important;
         }
-        .theme-nutrieye #controllerLoginModal .glass-panel {
-            background: rgba(255,250,235,.98) !important;
-            border-color: rgba(15,95,92,.18) !important;
+
+        .theme-nutrieye
+        #audience-card {
+            background:
+                rgba(255,255,255,.84);
+
+            border-color:
+                rgba(15,95,92,.20);
         }
-        .theme-nutrieye #controllerLoginModal h2 { color: #0f5f5c !important; }
-        .theme-nutrieye #controllerLoginModal p { color: #6e4a6c !important; }
-        .theme-nutrieye #controllerLoginModal input {
-            background: white !important;
-            color: #123f3c !important;
-            border-color: rgba(15,95,92,.25) !important;
+
+        .theme-nutrieye
+        #audience-card h2 {
+            color:
+                #0f5f5c;
         }
-    
+
+        .theme-nutrieye
+        #controller-gear {
+            background:
+                #fffaf0;
+
+            color:
+                #6e4a6c;
+        }
+
+        .theme-nutrieye
+        #display-view {
+            background:
+                radial-gradient(
+                    circle at 50% 28%,
+                    #fffdf7 0%,
+                    #f7edc8 52%,
+                    #e9dba7 100%
+                );
+        }
+
+        .theme-nutrieye
+        #display-title {
+            background:
+                none !important;
+
+            color:
+                #0f5f5c !important;
+
+            -webkit-text-fill-color:
+                #0f5f5c !important;
+        }
+
+        .theme-nutrieye
+        #display-subtitle {
+            color:
+                #6e4a6c !important;
+        }
+
+        .theme-nutrieye
+        .pointer {
+            border-top-color:
+                #6e4a6c;
+        }
+
+        .theme-nutrieye
+        .center-pin {
+            background:
+                radial-gradient(
+                    circle at 35% 35%,
+                    #fff7c7,
+                    #f6ce55 40%,
+                    #e5b500 80%
+                );
+
+            border-color:
+                #0f5f5c;
+        }
+
+        .theme-nutrieye
+        #display-spin-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f5f5c,
+                    #19736e,
+                    #2f7771
+                );
+
+            border-color:
+                #e5b500;
+        }
+
+        .theme-nutrieye
+        #winnerPanel {
+            background:
+                rgba(255,250,235,.95);
+
+            color:
+                #133d3b;
+        }
+
+        .theme-nutrieye
+        #winnerTitle {
+            color:
+                #0f5f5c !important;
+        }
+
+        .theme-nutrieye
+        #winnerText {
+            color:
+                #6e4a6c !important;
+
+            text-shadow:
+                none !important;
+        }
+
+
+        /* =========================================================
+           JUJIGRAINZ
+        ========================================================= */
+
         .theme-jujigrainz {
-            background: linear-gradient(180deg, #fff8fb 0%, #fde6ef 36%, #f7d3e1 68%, #f4cadb 100%) !important;
-            color: #7f1734 !important;
-        }
-        .theme-jujigrainz #landing-view {
             background:
-                radial-gradient(circle at 50% 20%, rgba(255,255,255,.98) 0%, rgba(255,245,249,.96) 30%, rgba(252,226,237,.96) 72%, rgba(247,207,222,.98) 100%),
-                linear-gradient(180deg, #fff8fb 0%, #fbe3ed 100%);
-            color: #7f1734;
+                linear-gradient(
+                    180deg,
+                    #fff8fb,
+                    #fde6ef,
+                    #f4cadb
+                ) !important;
+
+            color:
+                #7f1734;
         }
-        .theme-jujigrainz #landing-view::before,
-        .theme-jujigrainz #display-view::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
+
+        .theme-jujigrainz
+        #landing-view,
+        .theme-jujigrainz
+        #display-view {
             background:
-                radial-gradient(circle at 10% 12%, rgba(255,255,255,.55) 0 10px, transparent 11px),
-                radial-gradient(circle at 11% 18%, rgba(255,255,255,.48) 0 8px, transparent 9px),
-                radial-gradient(circle at 90% 12%, rgba(255,255,255,.55) 0 10px, transparent 11px),
-                radial-gradient(circle at 92% 18%, rgba(255,255,255,.40) 0 8px, transparent 9px),
-                linear-gradient(150deg, transparent 70%, rgba(244,185,205,.28) 82%, rgba(244,185,205,.18) 100%),
-                linear-gradient(20deg, transparent 72%, rgba(255,255,255,.6) 82%, transparent 84%);
-            z-index: 0;
+                radial-gradient(
+                    circle at 50% 20%,
+                    #ffffff 0%,
+                    #fff5f9 30%,
+                    #fce6ed 70%,
+                    #f7cfde 100%
+                );
         }
-        .theme-jujigrainz #landing-view::after,
-        .theme-jujigrainz #display-view::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
+
+        .theme-jujigrainz
+        #landing-view > h1,
+        .theme-jujigrainz
+        #display-title {
             background:
-                radial-gradient(ellipse at bottom left, rgba(248,189,210,.35) 0%, rgba(248,189,210,0) 40%),
-                radial-gradient(ellipse at top right, rgba(243,172,198,.25) 0%, rgba(243,172,198,0) 38%);
-            z-index: 0;
+                none !important;
+
+            color:
+                #b12f53 !important;
+
+            -webkit-text-fill-color:
+                #b12f53 !important;
         }
-        .theme-jujigrainz #landing-view > * { position: relative; z-index: 1; }
-        .theme-jujigrainz #display-view > .text-center,
-        .theme-jujigrainz #display-view > .wheel-container { position: relative; z-index: 1; }
-        .theme-jujigrainz #landing-view > h1,
-        .theme-jujigrainz #display-title {
-            background: none !important;
-            color: #b12f53 !important;
-            -webkit-text-fill-color: #b12f53 !important;
-            text-shadow: 0 3px 0 rgba(255,255,255,.65), 0 14px 28px rgba(177,47,83,.16);
+
+        .theme-jujigrainz
+        .preset-heading {
+            color:
+                #7f1734 !important;
         }
-        .theme-jujigrainz #landing-view > p,
-        .theme-jujigrainz #display-subtitle,
-        .theme-jujigrainz #landing-view .preset-label { color: #9a5a70 !important; }
-        .theme-jujigrainz #landing-view .preset-heading { color: #7f1734 !important; }
-        .theme-jujigrainz #landing-view .preset-card {
-            background: rgba(255,255,255,.78) !important;
-            border-color: rgba(177,47,83,.12) !important;
-            box-shadow: 0 8px 24px rgba(184,89,121,.12);
+
+        .theme-jujigrainz
+        .preset-label,
+        .theme-jujigrainz
+        #display-subtitle {
+            color:
+                #9a5a70 !important;
         }
-        .theme-jujigrainz #landing-view .preset-card .preset-title { color: #8d2040 !important; }
-        .theme-jujigrainz #landing-view .preset-card .preset-desc { color: #9a5a70 !important; }
-        .theme-jujigrainz #landing-view .preset-card.active {
-            background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,236,243,.96)) !important;
-            border-color: #d86d95 !important;
-            box-shadow: 0 0 0 2px rgba(216,109,149,.18), 0 16px 34px rgba(184,89,121,.16);
-        }
-        .theme-jujigrainz #audience-card {
-            background: rgba(255,255,255,.78) !important;
-            border-color: rgba(177,47,83,.10) !important;
-            box-shadow: 0 18px 40px rgba(184,89,121,.12);
-        }
-        .theme-jujigrainz #audience-card h2 { color: #8d2040 !important; }
-        .theme-jujigrainz #controller-gear {
-            background: rgba(255,255,255,.9) !important;
-            border-color: rgba(177,47,83,.14) !important;
-            color: #b12f53 !important;
-            box-shadow: 0 10px 20px rgba(177,47,83,.14);
-        }
-        .theme-jujigrainz #preset-status,
-        .theme-jujigrainz #auth-status.text-emerald-400 { color: #b12f53 !important; }
-        .theme-jujigrainz #display-view {
+
+        .theme-jujigrainz
+        .preset-card {
             background:
-                radial-gradient(circle at 50% 20%, rgba(255,255,255,.98) 0%, rgba(255,247,250,.97) 30%, rgba(252,230,237,.96) 72%, rgba(247,207,222,.98) 100%),
-                linear-gradient(180deg, #fff8fb 0%, #fbe3ed 100%);
+                rgba(255,255,255,.8);
+
+            border-color:
+                rgba(177,47,83,.12)
+                !important;
         }
-        .theme-jujigrainz .pointer { border-top-color: #e65274; }
-        .theme-jujigrainz .center-pin {
-            background: radial-gradient(circle at 35% 35%, #fff 0%, #ffeaf1 35%, #f5a3be 78%, #b12f53 100%);
-            border-color: #fff1f5;
-            box-shadow: inset 0 2px 4px rgba(127,23,52,.18), 0 4px 10px rgba(177,47,83,.28);
+
+        .theme-jujigrainz
+        .preset-title {
+            color:
+                #8d2040 !important;
         }
-        .theme-jujigrainz #display-view > button {
-            background: rgba(177,47,83,.9) !important;
-            border-color: rgba(255,255,255,.42) !important;
-            color: white !important;
+
+        .theme-jujigrainz
+        .preset-desc {
+            color:
+                #9a5a70 !important;
         }
-        .theme-jujigrainz #display-back-btn {
-            position: absolute !important;
-            top: 1rem !important;
-            left: 1rem !important;
-            right: auto !important;
-            background: rgba(177,47,83,.92) !important;
-            border-color: rgba(255,255,255,.42) !important;
-            color: white !important;
+
+        .theme-jujigrainz
+        #audience-card {
+            background:
+                rgba(255,255,255,.82);
+
+            border-color:
+                rgba(177,47,83,.12);
         }
-        .theme-jujigrainz #winnerPanel {
-            background: rgba(255,250,252,.94);
-            border-color: rgba(177,47,83,.18);
-            color: #7f1734;
-            box-shadow: 0 18px 40px rgba(177,47,83,.16);
+
+        .theme-jujigrainz
+        #audience-card h2 {
+            color:
+                #8d2040;
         }
-        .theme-jujigrainz #winnerTitle { color: #b12f53 !important; }
-        .theme-jujigrainz #winnerText { color: #8d2040 !important; text-shadow: none !important; }
-        .theme-jujigrainz #winnerWait { color: #9a5a70 !important; }
-        .theme-jujigrainz #display-spin-btn {
-            background: linear-gradient(135deg, #8b193d 0%, #b12f53 48%, #e65274 100%);
-            border-color: rgba(255,255,255,.72);
-            color: #fff;
-            box-shadow: 0 14px 34px rgba(177,47,83,.26), inset 0 1px 0 rgba(255,255,255,.30);
+
+        .theme-jujigrainz
+        #controller-gear {
+            background:
+                rgba(255,255,255,.9);
+
+            color:
+                #b12f53;
         }
-        .theme-jujigrainz #display-spin-btn:hover:not(:disabled) {
-            box-shadow: 0 18px 42px rgba(177,47,83,.34), 0 0 0 4px rgba(230,82,116,.10);
+
+        .theme-jujigrainz
+        .pointer {
+            border-top-color:
+                #e65274;
         }
-        .theme-jujigrainz #controllerLoginModal .glass-panel {
-            background: rgba(255,248,251,.98) !important;
-            border-color: rgba(177,47,83,.12) !important;
+
+        .theme-jujigrainz
+        .center-pin {
+            background:
+                radial-gradient(
+                    circle at 35% 35%,
+                    #ffffff,
+                    #ffeaf1 40%,
+                    #f5a3be 80%
+                );
+
+            border-color:
+                #b12f53;
         }
-        .theme-jujigrainz #controllerLoginModal h2 { color: #8d2040 !important; }
-        .theme-jujigrainz #controllerLoginModal p { color: #9a5a70 !important; }
-        .theme-jujigrainz #controllerLoginModal input {
-            background: white !important;
-            color: #7f1734 !important;
-            border-color: rgba(177,47,83,.16) !important;
+
+        .theme-jujigrainz
+        #display-spin-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b193d,
+                    #b12f53,
+                    #e65274
+                );
+        }
+
+        .theme-jujigrainz
+        #winnerPanel {
+            background:
+                rgba(255,250,252,.96);
+        }
+
+        .theme-jujigrainz
+        #winnerTitle {
+            color:
+                #b12f53 !important;
+        }
+
+        .theme-jujigrainz
+        #winnerText {
+            color:
+                #8d2040 !important;
+
+            text-shadow:
+                none !important;
+        }
+
+        .theme-jujigrainz
+        #display-back-btn {
+            position:
+                absolute !important;
+
+            top:
+                1rem !important;
+
+            left:
+                1rem !important;
+        }
+
+
+        /* =========================================================
+           LOCK UI
+        ========================================================= */
+
+        .lock-item {
+            transition:
+                background .15s ease,
+                border-color .15s ease;
+        }
+
+        .lock-item:hover {
+            background:
+                rgba(255,255,255,.05);
+        }
+
+        .lock-item.locked {
+            background:
+                rgba(239,68,68,.08);
+
+            border-color:
+                rgba(239,68,68,.28);
         }
 
     </style>
 </head>
+
+
 <body>
 
-    <!-- LANDING VIEW -->
-    <div id="landing-view" class="flex flex-col items-center justify-center h-full p-6 text-center relative">
-        <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-2 drop-shadow-lg">LUCKY DRAW</h1>
-        <p class="text-slate-400 mb-6">Real-time Synchronized Roulette</p>
 
-        <div class="w-full max-w-2xl mb-6 text-left">
-            <div class="flex items-end justify-between mb-3">
-                <div>
-                    <p class="preset-label text-xs uppercase tracking-[0.22em] text-slate-500">Wheel Preset</p>
-                    <h2 class="preset-heading text-lg font-semibold text-white">Choose a visual style</h2>
+<!-- =============================================================
+     MAIN PAGE
+============================================================= -->
+
+<div
+    id="landing-view"
+    class="flex flex-col items-center justify-center h-full p-6 text-center relative"
+>
+
+    <h1
+        class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-2"
+    >
+        LUCKY DRAW
+    </h1>
+
+    <p
+        class="text-slate-400 mb-6"
+    >
+        Real-time Synchronized Roulette
+    </p>
+
+
+    <div
+        class="w-full max-w-2xl mb-6 text-left"
+    >
+
+        <div
+            class="flex items-end justify-between mb-3"
+        >
+
+            <div>
+
+                <p
+                    class="preset-label text-xs uppercase tracking-[.22em] text-slate-500"
+                >
+                    Wheel Preset
+                </p>
+
+                <h2
+                    class="preset-heading text-lg font-semibold text-white"
+                >
+                    Choose a visual style
+                </h2>
+
+            </div>
+
+
+            <span
+                id="preset-status"
+                class="text-xs text-emerald-400"
+            >
+                Classic Night selected
+            </span>
+
+        </div>
+
+
+        <div
+            class="grid grid-cols-1 sm:grid-cols-3 gap-3"
+        >
+
+
+            <!-- CLASSIC -->
+
+            <button
+                id="preset-classic"
+                onclick="setWheelPreset('classic')"
+                class="preset-card active glass-panel border border-white/20 rounded-2xl p-4 text-left"
+            >
+
+                <div
+                    class="flex items-center justify-between gap-3 h-full"
+                >
+
+                    <div>
+
+                        <div
+                            class="preset-title font-bold text-white"
+                        >
+                            Classic Night
+                        </div>
+
+                        <div
+                            class="preset-desc text-xs text-slate-400 mt-1"
+                        >
+                            Original dark lucky-draw look
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="flex gap-1 shrink-0"
+                    >
+
+                        <span
+                            class="preset-dot"
+                            style="background:#ef4444"
+                        ></span>
+
+                        <span
+                            class="preset-dot"
+                            style="background:#f59e0b"
+                        ></span>
+
+                        <span
+                            class="preset-dot"
+                            style="background:#3b82f6"
+                        ></span>
+
+                        <span
+                            class="preset-dot"
+                            style="background:#8b5cf6"
+                        ></span>
+
+                    </div>
+
                 </div>
-                <span id="preset-status" class="text-xs text-emerald-400">Classic Night selected</span>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button id="preset-classic" onclick="setWheelPreset('classic')" class="preset-card active glass-panel border border-white/20 rounded-2xl p-4 text-left">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <div class="preset-title font-bold text-white">Classic Night</div>
-                            <div class="preset-desc text-xs text-slate-400 mt-1">Original dark lucky-draw look</div>
-                        </div>
-                        <div class="flex gap-1.5 shrink-0">
-                            <span class="preset-dot" style="background:#ef4444"></span>
-                            <span class="preset-dot" style="background:#f59e0b"></span>
-                            <span class="preset-dot" style="background:#3b82f6"></span>
-                            <span class="preset-dot" style="background:#8b5cf6"></span>
-                        </div>
-                    </div>
-                </button>
-                <button id="preset-nutrieye" onclick="setWheelPreset('nutrieye')" class="preset-card glass-panel border border-white/20 rounded-2xl p-4 text-left overflow-hidden relative">
-                    <div class="absolute inset-y-0 right-0 w-24 nutrieye-preview-bg opacity-25"></div>
-                    <div class="flex items-center justify-between gap-3 relative z-10 h-full">
-                        <div>
-                            <div class="preset-title font-bold text-white">Nutrieye Marigold</div>
-                            <div class="preset-desc text-xs text-slate-400 mt-1">Marigold · teal · cream · plum</div>
-                        </div>
-                        <img src="./Nutrieye_Front.png" alt="Nutrieye" onerror="handlePresetImageError(this, './Nutrieye_Front.jpg')" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
-                        <div class="preset-image-fallback hidden w-16 h-12 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 items-center justify-center shrink-0">Nutrieye</div>
-                    </div>
-                </button>
-                <button id="preset-jujigrainz" onclick="setWheelPreset('jujigrainz')" class="preset-card glass-panel border border-white/20 rounded-2xl p-4 text-left overflow-hidden relative">
-                    <div class="absolute inset-y-0 right-0 w-28 jujigrainz-preview-bg opacity-35"></div>
-                    <div class="flex items-center justify-between gap-3 relative z-10 h-full">
-                        <div>
-                            <div class="preset-title font-bold text-white">Jujigrainz Rose Glow</div>
-                            <div class="preset-desc text-xs text-slate-400 mt-1">Rose pink · berry red · blush · cream</div>
-                        </div>
-                        <img src="./Jujigrainz_Front.jpg" alt="Jujigrainz" class="w-16 h-12 object-contain rounded-md bg-white/80 p-1 shrink-0">
-                    </div>
-                </button>
-            </div>
-        </div>
-        
-        <div class="relative w-full max-w-2xl">
-            <button id="audience-card" onclick="selectMode('display')" class="w-full glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all group border-t border-l border-white/30 text-left relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <h2 class="text-3xl font-bold mb-2 text-white relative z-10">Start Lucky Draw</h2>
+
             </button>
 
-            <button id="controller-gear" onclick="openControllerLogin()" title="Backroom Controller" class="absolute -top-3 right-4 glass-panel hover:bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center border border-white/30 shadow-lg transition-all z-20">
-                <span class="text-2xl" aria-hidden="true">⚙️</span>
+
+            <!-- NUTRIEYE -->
+
+            <button
+                id="preset-nutrieye"
+                onclick="setWheelPreset('nutrieye')"
+                class="preset-card glass-panel border border-white/20 rounded-2xl p-4 text-left overflow-hidden relative"
+            >
+
+                <div
+                    class="absolute inset-y-0 right-0 w-24 nutrieye-preview-bg opacity-25"
+                ></div>
+
+
+                <div
+                    class="flex items-center justify-between gap-3 relative z-10 h-full"
+                >
+
+                    <div>
+
+                        <div
+                            class="preset-title font-bold text-white"
+                        >
+                            Nutrieye Marigold
+                        </div>
+
+                        <div
+                            class="preset-desc text-xs text-slate-400 mt-1"
+                        >
+                            Marigold · teal · cream · plum
+                        </div>
+
+                    </div>
+
+
+                    <img
+                        src="./Nutrieye_Front.png"
+                        alt="Nutrieye"
+                        class="w-16 h-12 object-contain rounded bg-white/80 p-1"
+                    >
+
+                </div>
+
             </button>
+
+
+            <!-- JUJIGRAINZ -->
+
+            <button
+                id="preset-jujigrainz"
+                onclick="setWheelPreset('jujigrainz')"
+                class="preset-card glass-panel border border-white/20 rounded-2xl p-4 text-left overflow-hidden relative"
+            >
+
+                <div
+                    class="absolute inset-y-0 right-0 w-24 jujigrainz-preview-bg opacity-30"
+                ></div>
+
+
+                <div
+                    class="flex items-center justify-between gap-3 relative z-10 h-full"
+                >
+
+                    <div>
+
+                        <div
+                            class="preset-title font-bold text-white"
+                        >
+                            Jujigrainz Rose Glow
+                        </div>
+
+                        <div
+                            class="preset-desc text-xs text-slate-400 mt-1"
+                        >
+                            Rose · berry · blush · cream
+                        </div>
+
+                    </div>
+
+
+                    <img
+                        src="./Jujigrainz_Front.jpg"
+                        alt="Jujigrainz"
+                        class="w-16 h-12 object-contain rounded bg-white/80 p-1"
+                    >
+
+                </div>
+
+            </button>
+
         </div>
-        
-        <div id="auth-status" class="mt-8 text-sm text-slate-500">Connecting to real-time server...</div>
+
     </div>
 
-    <!-- CONTROLLER LOGIN MODAL -->
-    <div id="controllerLoginModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="glass-panel w-full max-w-sm mx-4 rounded-3xl p-6 text-left shadow-2xl">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold text-white">Controller Login</h2>
-                <button onclick="closeControllerLogin()" class="text-slate-400 hover:text-white text-xl leading-none">×</button>
-            </div>
-            <p class="text-slate-300 text-sm mb-4">Enter the password to access the backroom controller.</p>
-            <input id="controllerPasswordInput" type="password" class="w-full bg-slate-900/60 border border-slate-600 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Enter password">
-            <p id="controllerLoginError" class="text-red-400 text-sm mt-2 min-h-[20px]"></p>
-            <div class="flex gap-3 mt-4">
-                <button onclick="closeControllerLogin()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-xl">Cancel</button>
-                <button onclick="submitControllerLogin()" class="flex-1 btn-secondary text-white font-semibold py-3 px-4 rounded-xl">Login</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- DISPLAY VIEW -->
-    <div id="display-view" class="hidden-view flex flex-col items-center justify-center h-full p-4 relative">
-        <button id="display-back-btn" onclick="goHome()" class="absolute top-4 left-4 z-20 bg-slate-900/70 hover:bg-slate-800 text-white text-sm px-3 py-2 rounded-lg border border-slate-700">
-            ← Back
+
+    <div
+        class="relative w-full max-w-2xl"
+    >
+
+        <button
+            id="audience-card"
+            onclick="selectMode('display')"
+            class="w-full glass-panel hover:bg-white/20 p-10 rounded-3xl transition-all text-left"
+        >
+
+            <h2
+                class="text-3xl font-bold text-white"
+            >
+                Start Lucky Draw
+            </h2>
+
         </button>
-        <div class="text-center mb-6 z-10">
-            <h1 id="display-title" class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-600 drop-shadow-lg tracking-tight">
-                LUCKY DRAW
-            </h1>
-            <p id="display-subtitle" class="text-slate-400 mt-1 tracking-wide">Real-time synchronized roulette</p>
-        </div>
 
-        <div class="wheel-container z-10">
-            <div class="pointer"></div>
-            <canvas id="wheelCanvas" width="800" height="800"></canvas>
-            <div class="center-pin"></div>
-        </div>
 
-        <div id="display-spin-wrap" class="z-10 mt-5 flex justify-center">
-            <button id="display-spin-btn" class="display-spin-btn" type="button">SPIN THE WHEEL</button>
-        </div>
+        <button
+            id="controller-gear"
+            onclick="openControllerLogin()"
+            class="absolute -top-3 right-4 glass-panel w-14 h-14 rounded-2xl flex items-center justify-center border border-white/30 shadow-lg"
+            title="Backroom Controller"
+        >
+            <span
+                class="text-2xl"
+            >
+                ⚙️
+            </span>
+        </button>
 
-        <!-- Winner Modal (Display) -->
-        <div id="winnerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-500">
-            <div class="glass-panel p-12 rounded-3xl max-w-lg w-full mx-4 text-center transform scale-95 transition-transform duration-500 shadow-[0_0_50px_rgba(251,191,36,0.3)]" id="winnerPanel">
-                <h2 id="winnerTitle" class="text-4xl font-bold text-yellow-400 mb-4">Congrats You Won</h2>
-                <p id="winnerText" class="text-6xl font-extrabold text-white my-8 break-words drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"></p>
-                <p id="winnerWait" class="text-slate-300 text-sm animate-pulse">Waiting for controller...</p>
-            </div>
-        </div>
     </div>
 
-    <!-- CONTROLLER VIEW -->
-    <div id="controller-view" class="hidden-view flex flex-col h-full bg-slate-900 p-4 md:p-8 overflow-y-auto">
-        <div class="max-w-3xl w-full mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h1 class="text-3xl font-bold text-white">Live Controller</h1>
-                    <p class="text-emerald-400 text-sm flex items-center gap-2 mt-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Connected & Syncing
+
+    <div
+        id="auth-status"
+        class="mt-8 text-sm text-slate-500"
+    >
+        Connecting...
+    </div>
+
+</div>
+
+
+
+<!-- =============================================================
+     LOGIN
+============================================================= -->
+
+<div
+    id="controllerLoginModal"
+    class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity"
+>
+
+    <div
+        class="glass-panel max-w-sm w-full mx-4 rounded-3xl p-6"
+    >
+
+        <h2
+            class="text-2xl font-bold mb-3"
+        >
+            Controller Login
+        </h2>
+
+
+        <p
+            class="text-sm text-slate-300 mb-4"
+        >
+            Enter password to access the Backroom.
+        </p>
+
+
+        <input
+            id="controllerPasswordInput"
+            type="password"
+            placeholder="Password"
+            class="w-full bg-slate-900/60 border border-slate-600 rounded-xl p-3 text-white"
+        >
+
+
+        <p
+            id="controllerLoginError"
+            class="text-red-400 text-sm mt-2 min-h-[20px]"
+        ></p>
+
+
+        <div
+            class="flex gap-3 mt-3"
+        >
+
+            <button
+                onclick="closeControllerLogin()"
+                class="flex-1 bg-slate-700 p-3 rounded-xl"
+            >
+                Cancel
+            </button>
+
+
+            <button
+                onclick="submitControllerLogin()"
+                class="flex-1 btn-secondary p-3 rounded-xl font-semibold"
+            >
+                Login
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =============================================================
+     DISPLAY
+============================================================= -->
+
+<div
+    id="display-view"
+    class="hidden-view flex flex-col items-center justify-center h-full p-4 relative"
+>
+
+
+    <button
+        id="display-back-btn"
+        onclick="goHome()"
+        class="absolute top-4 left-4 z-20 bg-slate-900/70 text-white text-sm px-3 py-2 rounded-lg"
+    >
+        ← Back
+    </button>
+
+
+    <div
+        class="text-center mb-6 z-10"
+    >
+
+        <h1
+            id="display-title"
+            class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-600"
+        >
+            LUCKY DRAW
+        </h1>
+
+
+        <p
+            id="display-subtitle"
+            class="text-slate-400 mt-1"
+        >
+            Real-time synchronized roulette
+        </p>
+
+    </div>
+
+
+    <div
+        class="wheel-container z-10"
+    >
+
+        <div
+            class="pointer"
+        ></div>
+
+        <canvas
+            id="wheelCanvas"
+            width="800"
+            height="800"
+        ></canvas>
+
+        <div
+            class="center-pin"
+        ></div>
+
+    </div>
+
+
+    <button
+        id="display-spin-btn"
+        class="display-spin-btn z-10 mt-5"
+    >
+        SPIN THE WHEEL
+    </button>
+
+
+
+    <!-- WINNER MODAL -->
+
+    <div
+        id="winnerModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity"
+    >
+
+        <div
+            id="winnerPanel"
+            class="glass-panel p-12 rounded-3xl max-w-lg w-full mx-4 text-center scale-95 transition-transform"
+        >
+
+            <h2
+                id="winnerTitle"
+                class="text-4xl font-bold text-yellow-400 mb-4"
+            >
+                Congrats You Won
+            </h2>
+
+
+            <p
+                id="winnerText"
+                class="text-6xl font-extrabold my-8"
+            ></p>
+
+
+            <p
+                class="text-sm text-slate-400"
+            >
+                Click outside this box to close
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =============================================================
+     CONTROLLER
+============================================================= -->
+
+<div
+    id="controller-view"
+    class="hidden-view flex flex-col h-full bg-slate-900 p-4 md:p-8 overflow-y-auto"
+>
+
+    <div
+        class="max-w-4xl w-full mx-auto"
+    >
+
+
+        <div
+            class="flex justify-between items-center mb-6"
+        >
+
+            <div>
+
+                <h1
+                    class="text-3xl font-bold"
+                >
+                    Live Controller
+                </h1>
+
+
+                <p
+                    class="text-emerald-400 text-sm mt-1"
+                >
+                    ● Connected & Syncing
+                </p>
+
+            </div>
+
+
+            <button
+                onclick="goHome()"
+                class="bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-sm"
+            >
+                ← Back
+            </button>
+
+        </div>
+
+
+
+        <div
+            class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        >
+
+
+            <!-- LEFT -->
+
+            <div
+                class="bg-slate-800 rounded-2xl p-6 border border-slate-700"
+            >
+
+                <h2
+                    class="text-xl font-semibold mb-4"
+                >
+                    Participant / Prize List
+                </h2>
+
+
+                <textarea
+                    id="ctrl-names"
+                    rows="8"
+                    placeholder="One prize per line"
+                    class="w-full bg-slate-900/60 border border-slate-600 rounded-xl p-4 resize-none"
+                ></textarea>
+
+
+                <p
+                    id="ctrl-count"
+                    class="text-xs text-slate-400 mt-2 text-right"
+                >
+                    0 items
+                </p>
+
+
+
+                <!-- LOCKS -->
+
+                <div
+                    class="mt-5 pt-5 border-t border-slate-700"
+                >
+
+                    <div
+                        class="flex items-start justify-between gap-3 mb-3"
+                    >
+
+                        <div>
+
+                            <h3
+                                class="font-semibold text-slate-200"
+                            >
+                                Excluded From Draw
+                            </h3>
+
+
+                            <p
+                                class="text-xs text-slate-400 mt-1"
+                            >
+                                Locked items stay visible but can never win.
+                            </p>
+
+                        </div>
+
+
+                        <span
+                            id="locked-count"
+                            class="text-xs bg-red-500/10 text-red-300 px-2 py-1 rounded-lg"
+                        >
+                            0 locked
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="ctrl-lock-list"
+                        class="space-y-2 max-h-52 overflow-y-auto pr-1"
+                    >
+
+                        <p
+                            class="text-sm text-slate-500"
+                        >
+                            Add items above to configure locks.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- RIGGED -->
+
+                <div
+                    class="mt-5 pt-5 border-t border-slate-700"
+                >
+
+                    <label
+                        class="text-sm font-medium text-slate-300"
+                    >
+                        Rigged Winner (Secret)
+                    </label>
+
+
+                    <select
+                        id="ctrl-rig"
+                        class="w-full mt-2 bg-slate-900 border border-slate-600 rounded-xl p-3"
+                    >
+
+                        <option
+                            value=""
+                        >
+                            -- Fair Spin (Random) --
+                        </option>
+
+                    </select>
+
+
+                    <p
+                        class="text-xs text-slate-500 mt-2"
+                    >
+                        If a rigged result is locked, it will be ignored and an unlocked result will be chosen randomly.
                     </p>
+
                 </div>
-                <button onclick="goHome()" class="text-slate-400 hover:text-white text-sm bg-slate-800 px-4 py-2 rounded-lg">← Back</button>
+
+
+
+                <!-- WINNER CUSTOMER NAME -->
+
+                <div
+                    class="mt-5"
+                >
+
+                    <label
+                        class="text-sm text-slate-300"
+                    >
+                        Winner Name for Effect (Optional)
+                    </label>
+
+
+                    <input
+                        id="ctrl-display-name"
+                        type="text"
+                        placeholder="Example: Michelle"
+                        class="w-full mt-2 bg-slate-900 border border-slate-600 rounded-xl p-3"
+                    >
+
+                </div>
+
+
+
+                <!-- AUTO REMOVE -->
+
+                <div
+                    class="mt-5 flex items-center"
+                >
+
+                    <input
+                        id="ctrl-remove"
+                        type="checkbox"
+                        checked
+                        class="w-5 h-5"
+                    >
+
+
+                    <label
+                        for="ctrl-remove"
+                        class="ml-3 text-sm text-slate-300"
+                    >
+                        Auto-remove winner after spin
+                    </label>
+
+                </div>
+
+
+
+                <button
+                    id="btn-update-list"
+                    class="w-full mt-6 bg-slate-700 hover:bg-slate-600 py-3 rounded-xl font-semibold"
+                >
+                    Sync List to Display
+                </button>
+
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Left Column: Settings -->
-                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                    <h2 class="text-xl font-semibold mb-4 text-slate-200">Participant List</h2>
-                    
-                    <textarea id="ctrl-names" rows="8" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none font-mono text-sm leading-relaxed placeholder-slate-500" placeholder="Enter names here (one per line)"></textarea>
-                    <p class="text-xs text-slate-400 mt-2 text-right" id="ctrl-count">0 names</p>
 
-                    <div class="mt-4 pt-4 border-t border-slate-700">
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Rigged Winner (Secret)</label>
-                        <select id="ctrl-rig" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500">
-                            <option value="">-- Fair Spin (Random) --</option>
-                        </select>
-                    </div>
 
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Winner Name for Effect (Optional)</label>
-                        <input id="ctrl-display-name" type="text" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Type winner name for display effect">
-                        <p class="text-xs text-slate-400 mt-2">If left empty, the winner popup will say: <span class="text-white">Congrats You Won</span>.</p>
-                    </div>
+            <!-- RIGHT -->
 
-                    <div class="mt-4 flex items-center">
-                        <input type="checkbox" id="ctrl-remove" class="w-5 h-5 text-blue-600 bg-slate-900 border-slate-600 rounded focus:ring-blue-500" checked>
-                        <label for="ctrl-remove" class="ml-3 text-sm font-medium text-slate-300">Auto-remove winner after spin completes</label>
-                    </div>
+            <div
+                class="bg-slate-800 rounded-2xl p-6 border border-slate-700 flex flex-col"
+            >
 
-                    <button id="btn-update-list" class="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors border border-slate-600">
-                        Sync List to Display
+                <h2
+                    class="text-xl font-semibold"
+                >
+                    Actions
+                </h2>
+
+
+                <div
+                    class="flex-grow flex flex-col justify-center mt-6"
+                >
+
+                    <button
+                        id="btn-spin"
+                        class="btn-primary text-3xl font-bold py-6 rounded-full"
+                    >
+                        SPIN WHEEL!
                     </button>
+
+
+                    <div
+                        id="eligibility-status"
+                        class="text-center text-sm text-slate-400 mt-4"
+                    >
+                        Checking eligible items...
+                    </div>
+
                 </div>
 
-                <!-- Right Column: Actions & Status -->
-                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl flex flex-col">
-                    <h2 class="text-xl font-semibold mb-4 text-slate-200">Actions</h2>
-                    
-                    <div class="flex-grow flex flex-col items-center justify-center bg-slate-900/50 rounded-xl border border-slate-700 p-6 mb-6">
-                        <p class="text-sm text-slate-400 mb-6 text-center">Pressing this will instantly trigger the spin on the Display mode.</p>
-                        
-                        <button id="btn-spin" class="btn-primary text-white font-bold text-3xl py-6 px-12 rounded-full w-full shadow-[0_0_20px_rgba(251,191,36,0.2)]">
-                            SPIN WHEEL!
-                        </button>
-                    </div>
-                    
-                    <div class="p-4 bg-indigo-900/30 border border-indigo-500/30 rounded-xl">
-                        <h3 class="text-sm font-medium text-indigo-300 mb-3 uppercase tracking-wider">Post-Spin Controls</h3>
-                        <button id="btn-dismiss-winner" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-xl transition-colors disabled:opacity-50">
-                            Dismiss Winner Screen on Display
-                        </button>
-                    </div>
+
+
+                <div
+                    class="mt-6 p-4 bg-indigo-900/30 rounded-xl"
+                >
+
+                    <button
+                        id="btn-dismiss-winner"
+                        class="w-full bg-indigo-600 py-3 rounded-xl"
+                    >
+                        Dismiss Winner Screen
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
-    <script type="module">
-        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+</div>
 
-        const SUPABASE_URL = "https://uhijcfejfkaentfavojl.supabase.co";
-        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3muMLB8AzkBBWySV_2jWyQ_iXj0AnTF";
-        const STATE_TABLE = "lucky_draw_state";
-        const STATE_ID = 1;
-        const CONTROLLER_PASSWORD = "admin123";
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-        // Core App State
-        let currentMode = null; // 'display' or 'controller'
-        let isSupabaseReady = false;
-        let displayInitialized = false;
-        let controllerInitialized = false;
-        let displayChannel = null;
-        let controllerChannel = null;
+<script type="module">
 
-        // Wheel State
-        let wheelNames = ["Loading..."];
-        const PRESETS = {
-            classic: {
-                name: 'Classic Night',
-                colors: ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#d946ef"],
-                title: 'LUCKY DRAW',
-                subtitle: 'Real-time synchronized roulette',
-                emptyBg: '#334155',
-                emptyText: '#94a3b8'
-            },
-            nutrieye: {
-                name: 'Nutrieye Marigold',
-                colors: ["#e5b500", "#0f5f5c", "#f4df9a", "#6e4a6c", "#d99f00", "#2f7771", "#fff4cf", "#9c7699"],
-                title: 'NUTRIEYE LUCKY DRAW',
-                subtitle: 'Spin for a Bright Surprise',
-                emptyBg: '#f4df9a',
-                emptyText: '#0f5f5c'
-            },
-            jujigrainz: {
-                name: 'Jujigrainz Rose Glow',
-                colors: ["#ab274f", "#d7587d", "#f2b7c9", "#fff4f7", "#c54270", "#8b193d", "#f7d5e1", "#f07ea2"],
-                title: 'JUJIGRAINZ LUCKY DRAW',
-                subtitle: 'Spin for a Nourishing Surprise',
-                emptyBg: '#f7d5e1',
-                emptyText: '#8b193d'
+/* =============================================================
+   SUPABASE
+============================================================= */
+
+import {
+    createClient
+}
+from
+"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+
+const SUPABASE_URL =
+"https://uhijcfejfkaentfavojl.supabase.co";
+
+
+const SUPABASE_PUBLISHABLE_KEY =
+"sb_publishable_3muMLB8AzkBBWySV_2jWyQ_iXj0AnTF";
+
+
+const STATE_TABLE =
+"lucky_draw_state";
+
+
+const STATE_ID =
+1;
+
+
+const CONTROLLER_PASSWORD =
+"admin123";
+
+
+const supabase =
+createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+
+
+/* =============================================================
+   STATE
+============================================================= */
+
+let currentMode =
+null;
+
+
+let isSupabaseReady =
+false;
+
+
+let displayInitialized =
+false;
+
+
+let controllerInitialized =
+false;
+
+
+let displayChannel =
+null;
+
+
+let controllerChannel =
+null;
+
+
+let wheelEntries =
+[];
+
+
+let currentRotation =
+0;
+
+
+let isSpinning =
+false;
+
+
+let lastSpinTimestamp =
+0;
+
+
+let inputRefreshTimer =
+null;
+
+
+
+/* =============================================================
+   THEMES
+============================================================= */
+
+const PRESETS = {
+
+    classic: {
+
+        name:
+        "Classic Night",
+
+        colors: [
+            "#ef4444",
+            "#f97316",
+            "#f59e0b",
+            "#10b981",
+            "#06b6d4",
+            "#3b82f6",
+            "#8b5cf6",
+            "#d946ef"
+        ],
+
+        title:
+        "LUCKY DRAW",
+
+        subtitle:
+        "Real-time synchronized roulette"
+    },
+
+
+    nutrieye: {
+
+        name:
+        "Nutrieye Marigold",
+
+        colors: [
+            "#e5b500",
+            "#0f5f5c",
+            "#f4df9a",
+            "#6e4a6c",
+            "#d99f00",
+            "#2f7771",
+            "#fff4cf",
+            "#9c7699"
+        ],
+
+        title:
+        "NUTRIEYE LUCKY DRAW",
+
+        subtitle:
+        "Spin for a Bright Surprise"
+    },
+
+
+    jujigrainz: {
+
+        name:
+        "Jujigrainz Rose Glow",
+
+        colors: [
+            "#ab274f",
+            "#d7587d",
+            "#f2b7c9",
+            "#fff4f7",
+            "#c54270",
+            "#8b193d",
+            "#f7d5e1",
+            "#f07ea2"
+        ],
+
+        title:
+        "JUJIGRAINZ LUCKY DRAW",
+
+        subtitle:
+        "Spin for a Nourishing Surprise"
+    }
+
+};
+
+
+let activePreset =
+localStorage.getItem(
+    "wheelPreset"
+) || "classic";
+
+
+if (
+    !PRESETS[
+        activePreset
+    ]
+) {
+
+    activePreset =
+    "classic";
+}
+
+
+let wheelColors =
+[
+    ...PRESETS[
+        activePreset
+    ].colors
+];
+
+
+
+/* =============================================================
+   DOM
+============================================================= */
+
+const canvas =
+document.getElementById(
+    "wheelCanvas"
+);
+
+
+const ctx =
+canvas.getContext(
+    "2d"
+);
+
+
+const winnerModal =
+document.getElementById(
+    "winnerModal"
+);
+
+
+const winnerPanel =
+document.getElementById(
+    "winnerPanel"
+);
+
+
+const winnerTitle =
+document.getElementById(
+    "winnerTitle"
+);
+
+
+const winnerText =
+document.getElementById(
+    "winnerText"
+);
+
+
+const displaySpinBtn =
+document.getElementById(
+    "display-spin-btn"
+);
+
+
+const ctrlNames =
+document.getElementById(
+    "ctrl-names"
+);
+
+
+const ctrlRig =
+document.getElementById(
+    "ctrl-rig"
+);
+
+
+const ctrlRemove =
+document.getElementById(
+    "ctrl-remove"
+);
+
+
+const ctrlDisplayName =
+document.getElementById(
+    "ctrl-display-name"
+);
+
+
+const btnUpdateList =
+document.getElementById(
+    "btn-update-list"
+);
+
+
+const btnSpin =
+document.getElementById(
+    "btn-spin"
+);
+
+
+const btnDismissWinner =
+document.getElementById(
+    "btn-dismiss-winner"
+);
+
+
+const ctrlCount =
+document.getElementById(
+    "ctrl-count"
+);
+
+
+const lockList =
+document.getElementById(
+    "ctrl-lock-list"
+);
+
+
+const lockedCount =
+document.getElementById(
+    "locked-count"
+);
+
+
+const eligibilityStatus =
+document.getElementById(
+    "eligibility-status"
+);
+
+
+const authStatus =
+document.getElementById(
+    "auth-status"
+);
+
+
+const controllerLoginModal =
+document.getElementById(
+    "controllerLoginModal"
+);
+
+
+const controllerPasswordInput =
+document.getElementById(
+    "controllerPasswordInput"
+);
+
+
+const controllerLoginError =
+document.getElementById(
+    "controllerLoginError"
+);
+
+
+const presetStatus =
+document.getElementById(
+    "preset-status"
+);
+
+
+const displayTitle =
+document.getElementById(
+    "display-title"
+);
+
+
+const displaySubtitle =
+document.getElementById(
+    "display-subtitle"
+);
+
+
+
+/* =============================================================
+   ENTRY FORMAT
+============================================================= */
+
+/*
+Old database format:
+
+[
+    "Prize A",
+    "Prize B"
+]
+
+
+New format:
+
+[
+    {
+        name: "Prize A",
+        locked: false
+    },
+
+    {
+        name: "Prize B",
+        locked: true
+    }
+]
+
+
+This lets us add lock functionality without creating
+a new Supabase column.
+*/
+
+
+function normalizeEntries(
+    raw
+) {
+
+    if (
+        !Array.isArray(
+            raw
+        )
+    ) {
+
+        return [];
+    }
+
+
+    return raw
+    .map(
+        item => {
+
+            if (
+                typeof item ===
+                "string"
+            ) {
+
+                return {
+                    name:
+                    item.trim(),
+
+                    locked:
+                    false
+                };
             }
+
+
+            if (
+                item &&
+                typeof item ===
+                "object"
+            ) {
+
+                return {
+
+                    name:
+                    String(
+                        item.name ||
+                        ""
+                    ).trim(),
+
+                    locked:
+                    item.locked ===
+                    true
+
+                };
+            }
+
+
+            return null;
+        }
+    )
+    .filter(
+        item =>
+        item &&
+        item.name.length > 0
+    );
+}
+
+
+
+function getEligibleIndices(
+    entries
+) {
+
+    const eligible =
+    [];
+
+
+    entries.forEach(
+        (
+            entry,
+            index
+        ) => {
+
+            if (
+                !entry.locked
+            ) {
+
+                eligible.push(
+                    index
+                );
+            }
+        }
+    );
+
+
+    return eligible;
+}
+
+
+
+function chooseTargetIndex(
+    entries,
+    riggedIndex
+) {
+
+    const eligible =
+    getEligibleIndices(
+        entries
+    );
+
+
+    if (
+        eligible.length ===
+        0
+    ) {
+
+        return -1;
+    }
+
+
+    /*
+    Use rigged result only when:
+
+    - index exists
+    - item exists
+    - item is NOT locked
+    */
+
+    if (
+        Number.isInteger(
+            riggedIndex
+        ) &&
+        riggedIndex >= 0 &&
+        riggedIndex <
+        entries.length &&
+        !entries[
+            riggedIndex
+        ].locked
+    ) {
+
+        return riggedIndex;
+    }
+
+
+    /*
+    Rigged item is invalid or locked.
+
+    Pick random unlocked item.
+    */
+
+    return eligible[
+        Math.floor(
+            Math.random() *
+            eligible.length
+        )
+    ];
+}
+
+
+
+/* =============================================================
+   PRESET
+============================================================= */
+
+function applyWheelPreset(
+    presetKey
+) {
+
+    const preset =
+    PRESETS[
+        presetKey
+    ] ||
+    PRESETS.classic;
+
+
+    activePreset =
+    PRESETS[
+        presetKey
+    ]
+    ?
+    presetKey
+    :
+    "classic";
+
+
+    wheelColors =
+    [
+        ...preset.colors
+    ];
+
+
+    document.body
+    .classList
+    .remove(
+        "theme-nutrieye",
+        "theme-jujigrainz"
+    );
+
+
+    if (
+        activePreset ===
+        "nutrieye"
+    ) {
+
+        document.body
+        .classList
+        .add(
+            "theme-nutrieye"
+        );
+    }
+
+
+    if (
+        activePreset ===
+        "jujigrainz"
+    ) {
+
+        document.body
+        .classList
+        .add(
+            "theme-jujigrainz"
+        );
+    }
+
+
+    displayTitle.textContent =
+    preset.title;
+
+
+    displaySubtitle.textContent =
+    preset.subtitle;
+
+
+    presetStatus.textContent =
+    `${preset.name} selected`;
+
+
+    document
+    .getElementById(
+        "preset-classic"
+    )
+    .classList
+    .toggle(
+        "active",
+        activePreset ===
+        "classic"
+    );
+
+
+    document
+    .getElementById(
+        "preset-nutrieye"
+    )
+    .classList
+    .toggle(
+        "active",
+        activePreset ===
+        "nutrieye"
+    );
+
+
+    document
+    .getElementById(
+        "preset-jujigrainz"
+    )
+    .classList
+    .toggle(
+        "active",
+        activePreset ===
+        "jujigrainz"
+    );
+
+
+    drawWheel();
+}
+
+
+window.setWheelPreset =
+function(
+    presetKey
+) {
+
+    localStorage.setItem(
+        "wheelPreset",
+        presetKey
+    );
+
+
+    applyWheelPreset(
+        presetKey
+    );
+};
+
+
+
+/* =============================================================
+   DATABASE
+============================================================= */
+
+async function fetchState() {
+
+    const {
+        data,
+        error
+    } =
+    await supabase
+    .from(
+        STATE_TABLE
+    )
+    .select(
+        "*"
+    )
+    .eq(
+        "id",
+        STATE_ID
+    )
+    .single();
+
+
+    if (
+        error
+    ) {
+
+        throw error;
+    }
+
+
+    return data;
+}
+
+
+
+async function updateState(
+    changes
+) {
+
+    const {
+        error
+    } =
+    await supabase
+    .from(
+        STATE_TABLE
+    )
+    .update(
+        changes
+    )
+    .eq(
+        "id",
+        STATE_ID
+    );
+
+
+    if (
+        error
+    ) {
+
+        throw error;
+    }
+}
+
+
+
+async function initSupabase() {
+
+    try {
+
+        await fetchState();
+
+
+        isSupabaseReady =
+        true;
+
+
+        authStatus.textContent =
+        "Connected!";
+
+
+        authStatus.className =
+        "mt-8 text-sm text-emerald-400";
+
+
+        if (
+            currentMode ===
+            "display"
+        ) {
+
+            initDisplay();
+        }
+
+
+        if (
+            currentMode ===
+            "controller"
+        ) {
+
+            initController();
+        }
+
+    }
+    catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+
+
+        authStatus.textContent =
+        "Connection failed";
+
+
+        authStatus.className =
+        "mt-8 text-sm text-red-400";
+    }
+}
+
+
+
+/* =============================================================
+   NAVIGATION
+============================================================= */
+
+function hideAllViews() {
+
+    [
+        "landing-view",
+        "display-view",
+        "controller-view"
+    ]
+    .forEach(
+        id => {
+
+            document
+            .getElementById(
+                id
+            )
+            .classList
+            .add(
+                "hidden-view"
+            );
+        }
+    );
+}
+
+
+
+function showView(
+    mode
+) {
+
+    currentMode =
+    mode;
+
+
+    hideAllViews();
+
+
+    document
+    .getElementById(
+        `${mode}-view`
+    )
+    .classList
+    .remove(
+        "hidden-view"
+    );
+
+
+    if (
+        !isSupabaseReady
+    ) {
+
+        return;
+    }
+
+
+    if (
+        mode ===
+        "display"
+    ) {
+
+        initDisplay();
+    }
+
+
+    if (
+        mode ===
+        "controller"
+    ) {
+
+        initController();
+    }
+}
+
+
+
+window.selectMode =
+function(
+    mode
+) {
+
+    showView(
+        mode
+    );
+};
+
+
+
+window.goHome =
+function() {
+
+    currentMode =
+    null;
+
+
+    hideAllViews();
+
+
+    document
+    .getElementById(
+        "landing-view"
+    )
+    .classList
+    .remove(
+        "hidden-view"
+    );
+};
+
+
+
+/* =============================================================
+   LOGIN
+============================================================= */
+
+window.openControllerLogin =
+function() {
+
+    controllerLoginModal
+    .classList
+    .remove(
+        "opacity-0",
+        "pointer-events-none"
+    );
+
+
+    controllerPasswordInput.value =
+    "";
+
+
+    controllerLoginError.textContent =
+    "";
+
+
+    setTimeout(
+        () =>
+        controllerPasswordInput.focus(),
+        50
+    );
+};
+
+
+
+window.closeControllerLogin =
+function() {
+
+    controllerLoginModal
+    .classList
+    .add(
+        "opacity-0",
+        "pointer-events-none"
+    );
+};
+
+
+
+window.submitControllerLogin =
+function() {
+
+    if (
+        controllerPasswordInput.value !==
+        CONTROLLER_PASSWORD
+    ) {
+
+        controllerLoginError.textContent =
+        "Wrong password";
+
+        return;
+    }
+
+
+    closeControllerLogin();
+
+
+    showView(
+        "controller"
+    );
+};
+
+
+
+controllerPasswordInput
+.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key ===
+            "Enter"
+        ) {
+
+            submitControllerLogin();
+        }
+    }
+);
+
+
+
+/* =============================================================
+   WINNER PAYLOAD
+============================================================= */
+
+function buildWinnerPayload(
+    prize,
+    displayName
+) {
+
+    return JSON.stringify({
+
+        prize:
+        prize || "",
+
+        displayName:
+        (
+            displayName ||
+            ""
+        ).trim()
+
+    });
+}
+
+
+
+function parseWinnerPayload(
+    raw
+) {
+
+    if (
+        !raw
+    ) {
+
+        return {
+            prize:
+            "",
+
+            displayName:
+            ""
         };
-        let activePreset = localStorage.getItem('wheelPreset') || 'classic';
-        let wheelColors = [...PRESETS[activePreset].colors];
-        let currentRotation = 0;
-        let isSpinning = false;
-        let lastSpinTimestamp = 0;
+    }
 
-        // DOM Elements - Display
-        const canvas = document.getElementById('wheelCanvas');
-        const ctx = canvas?.getContext('2d');
-        const winnerModal = document.getElementById('winnerModal');
-        const winnerPanel = document.getElementById('winnerPanel');
-        const winnerText = document.getElementById('winnerText');
-        const winnerTitle = document.getElementById('winnerTitle');
-        const displaySpinBtn = document.getElementById('display-spin-btn');
 
-        // DOM Elements - Controller
-        const ctrlNames = document.getElementById('ctrl-names');
-        const ctrlRig = document.getElementById('ctrl-rig');
-        const ctrlRemove = document.getElementById('ctrl-remove');
-        const btnUpdateList = document.getElementById('btn-update-list');
-        const btnSpin = document.getElementById('btn-spin');
-        const btnDismissWinner = document.getElementById('btn-dismiss-winner');
-        const ctrlCount = document.getElementById('ctrl-count');
-        const authStatus = document.getElementById('auth-status');
-        const ctrlDisplayName = document.getElementById('ctrl-display-name');
-        const controllerLoginModal = document.getElementById('controllerLoginModal');
-        const controllerPasswordInput = document.getElementById('controllerPasswordInput');
-        const controllerLoginError = document.getElementById('controllerLoginError');
-        const presetStatus = document.getElementById('preset-status');
-        const presetClassic = document.getElementById('preset-classic');
-        const presetNutrieye = document.getElementById('preset-nutrieye');
-        const presetJujigrainz = document.getElementById('preset-jujigrainz');
-        const displayTitle = document.getElementById('display-title');
-        const displaySubtitle = document.getElementById('display-subtitle');
+    try {
 
-        function applyWheelPreset(presetKey) {
-            const preset = PRESETS[presetKey] || PRESETS.classic;
-            activePreset = presetKey in PRESETS ? presetKey : 'classic';
-            wheelColors = [...preset.colors];
-            document.body.classList.remove('theme-nutrieye', 'theme-jujigrainz');
-            if (activePreset === 'nutrieye') document.body.classList.add('theme-nutrieye');
-            if (activePreset === 'jujigrainz') document.body.classList.add('theme-jujigrainz');
-            if (displayTitle) displayTitle.textContent = preset.title;
-            if (displaySubtitle) displaySubtitle.textContent = preset.subtitle;
-            if (presetStatus) presetStatus.textContent = `${preset.name} selected`;
-            presetClassic?.classList.toggle('active', activePreset === 'classic');
-            presetNutrieye?.classList.toggle('active', activePreset === 'nutrieye');
-            presetJujigrainz?.classList.toggle('active', activePreset === 'jujigrainz');
-            drawWheel();
+        const parsed =
+        JSON.parse(
+            raw
+        );
+
+
+        if (
+            parsed &&
+            typeof parsed ===
+            "object"
+        ) {
+
+            return {
+
+                prize:
+                parsed.prize ||
+                "",
+
+                displayName:
+                parsed.displayName ||
+                ""
+
+            };
         }
 
-        window.setWheelPreset = function(presetKey) {
-            localStorage.setItem('wheelPreset', presetKey);
-            applyWheelPreset(presetKey);
-        };
+    }
+    catch (
+        error
+    ) {}
 
-        function setConnectionStatus(message, ok = false) {
-            if (!authStatus) return;
-            authStatus.innerText = message;
-            authStatus.classList.remove('text-red-500', 'text-emerald-400', 'text-slate-500');
-            authStatus.classList.add(ok ? 'text-emerald-400' : 'text-red-500');
-        }
 
-        async function fetchState() {
-            const { data, error } = await supabase
-                .from(STATE_TABLE)
-                .select('*')
-                .eq('id', STATE_ID)
-                .single();
+    return {
 
-            if (error) throw error;
-            return data;
-        }
+        prize:
+        raw,
 
-        async function updateState(changes) {
-            const { error } = await supabase
-                .from(STATE_TABLE)
-                .update(changes)
-                .eq('id', STATE_ID);
+        displayName:
+        ""
 
-            if (error) throw error;
-        }
+    };
+}
 
-        async function initSupabase() {
-            try {
-                // Verify that the browser can read the shared state row.
-                await fetchState();
 
-                isSupabaseReady = true;
-                setConnectionStatus("Connected!", true);
 
-                // If a mode was already selected while loading, initialize it.
-                if (currentMode === 'display') initDisplay();
-                if (currentMode === 'controller') initController();
-            } catch (err) {
-                console.error("Supabase init failed:", err);
-                isSupabaseReady = false;
-                setConnectionStatus("Connection failed. Check Supabase settings/policies.");
-            }
-        }
+/* =============================================================
+   DRAW WHEEL
+============================================================= */
 
-        function hideAllViews() {
-            document.getElementById('landing-view').classList.add('hidden-view');
-            document.getElementById('display-view').classList.add('hidden-view');
-            document.getElementById('controller-view').classList.add('hidden-view');
-        }
+function drawWheel() {
 
-        function showView(mode) {
-            currentMode = mode;
-            hideAllViews();
-            if (mode === 'display') {
-                document.getElementById('display-view').classList.remove('hidden-view');
-                if (isSupabaseReady) initDisplay();
-            } else {
-                document.getElementById('controller-view').classList.remove('hidden-view');
-                if (isSupabaseReady) initController();
-            }
-        }
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
-        // Global mode selector called from HTML
-        window.selectMode = function(mode) {
-            if (mode === 'controller') {
-                openControllerLogin();
-                return;
-            }
-            showView(mode);
-        };
 
-        window.goHome = function() {
-            currentMode = null;
-            hideAllViews();
-            closeControllerLogin();
-            document.getElementById('landing-view').classList.remove('hidden-view');
-        };
+    const centerX =
+    canvas.width /
+    2;
 
-        window.openControllerLogin = function() {
-            controllerLoginModal.classList.remove('pointer-events-none', 'opacity-0');
-            controllerPasswordInput.value = '';
-            controllerLoginError.textContent = '';
-            setTimeout(() => controllerPasswordInput.focus(), 50);
-        };
 
-        window.closeControllerLogin = function() {
-            controllerLoginModal.classList.add('opacity-0', 'pointer-events-none');
-            controllerLoginError.textContent = '';
-        };
+    const centerY =
+    canvas.height /
+    2;
 
-        window.submitControllerLogin = function() {
-            const entered = controllerPasswordInput.value;
-            if (entered !== CONTROLLER_PASSWORD) {
-                controllerLoginError.textContent = 'Wrong password. Please try again.';
-                controllerPasswordInput.focus();
-                controllerPasswordInput.select();
-                return;
-            }
-            closeControllerLogin();
-            showView('controller');
-        };
 
-        function handleDisplayState(data, isInitial = false) {
-            if (!data) return;
+    const radius =
+    Math.min(
+        centerX,
+        centerY
+    ) - 20;
 
-            // Only update names if we aren't currently spinning.
-            if (!isSpinning) {
-                wheelNames = Array.isArray(data.names) ? data.names : [];
-                drawWheel();
-            }
-            if (displaySpinBtn) {
-                displaySpinBtn.disabled = isSpinning || wheelNames.length === 0;
-            }
 
-            const timestamp = Number(data.spin_timestamp || 0);
+    if (
+        wheelEntries.length ===
+        0
+    ) {
 
-            // Do not replay an old spin when a display first opens.
-            if (isInitial) {
-                lastSpinTimestamp = timestamp;
-            } else if (timestamp > lastSpinTimestamp) {
-                lastSpinTimestamp = timestamp;
-                triggerSpinVisuals(Number(data.winner_index), parseWinnerPayload(data.winner_name));
-            }
+        ctx.beginPath();
 
-            if (data.show_winner_modal && !isSpinning) {
-                showWinnerModal(parseWinnerPayload(data.winner_name));
-            } else if (!data.show_winner_modal) {
-                hideWinnerModal();
-            }
-        }
+        ctx.arc(
+            centerX,
+            centerY,
+            radius,
+            0,
+            Math.PI * 2
+        );
 
-        function parseWinnerPayload(rawValue) {
-            if (!rawValue) return { prize: '', displayName: '' };
-            if (typeof rawValue === 'string') {
-                try {
-                    const parsed = JSON.parse(rawValue);
-                    if (parsed && typeof parsed === 'object' && ('prize' in parsed || 'displayName' in parsed)) {
-                        return {
-                            prize: parsed.prize || '',
-                            displayName: parsed.displayName || ''
-                        };
-                    }
-                } catch (e) {
-                    // plain text fallback
-                }
-                return { prize: rawValue, displayName: '' };
-            }
-            return { prize: '', displayName: '' };
-        }
+        ctx.fillStyle =
+        "#334155";
 
-        function buildWinnerPayload(prize, displayName) {
-            return JSON.stringify({
-                prize: prize || '',
-                displayName: (displayName || '').trim()
-            });
-        }
+        ctx.fill();
 
-        async function initDisplay() {
-            if (displayInitialized) return;
-            displayInitialized = true;
 
-            drawWheel();
+        ctx.fillStyle =
+        "#94a3b8";
 
-            try {
-                const initialState = await fetchState();
-                handleDisplayState(initialState, true);
-            } catch (error) {
-                console.error("Display initial load error:", error);
-            }
 
-            displayChannel = supabase
-                .channel('lucky-draw-display')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: STATE_TABLE,
-                        filter: `id=eq.${STATE_ID}`
-                    },
-                    (payload) => handleDisplayState(payload.new, false)
-                )
-                .subscribe((status) => {
-                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                        console.error('Display realtime channel status:', status);
-                    }
-                });
-        }
+        ctx.font =
+        "bold 40px Inter";
 
-        function drawWheel() {
-            if (!ctx || !canvas) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 20;
+        ctx.textAlign =
+        "center";
 
-            if (wheelNames.length === 0) {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                ctx.fillStyle = PRESETS[activePreset]?.emptyBg || '#334155';
-                ctx.fill();
-                ctx.fillStyle = PRESETS[activePreset]?.emptyText || '#94a3b8';
-                ctx.font = "bold 40px Inter";
-                ctx.textAlign = "center";
-                ctx.fillText("NO NAMES", centerX, centerY + 15);
-                return;
-            }
 
-            const sliceAngle = (Math.PI * 2) / wheelNames.length;
+        ctx.fillText(
+            "NO ITEMS",
+            centerX,
+            centerY + 12
+        );
 
-            for (let i = 0; i < wheelNames.length; i++) {
-                const startAngle = (currentRotation * Math.PI / 180) + i * sliceAngle;
-                const endAngle = startAngle + sliceAngle;
 
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-                ctx.fillStyle = wheelColors[i % wheelColors.length];
-                ctx.fill();
+        return;
+    }
 
-                const isPremiumWheel = activePreset === 'nutrieye' || activePreset === 'jujigrainz';
-                ctx.lineWidth = isPremiumWheel ? 5 : 4;
-                ctx.strokeStyle = isPremiumWheel ? "rgba(255,255,255,0.62)" : "rgba(0,0,0,0.22)";
-                ctx.stroke();
+
+
+    const sliceAngle =
+    (
+        Math.PI *
+        2
+    ) /
+    wheelEntries.length;
+
+
+
+    wheelEntries.forEach(
+        (
+            entry,
+            index
+        ) => {
+
+            const startAngle =
+            currentRotation *
+            Math.PI /
+            180 +
+            index *
+            sliceAngle;
+
+
+            const endAngle =
+            startAngle +
+            sliceAngle;
+
+
+            ctx.beginPath();
+
+
+            ctx.moveTo(
+                centerX,
+                centerY
+            );
+
+
+            ctx.arc(
+                centerX,
+                centerY,
+                radius,
+                startAngle,
+                endAngle
+            );
+
+
+            ctx.fillStyle =
+            wheelColors[
+                index %
+                wheelColors.length
+            ];
+
+
+            ctx.fill();
+
+
+
+            /*
+            Locked slices remain visible but dimmed.
+            */
+
+            if (
+                entry.locked
+            ) {
 
                 ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(startAngle + sliceAngle / 2);
 
-                ctx.textAlign = "right";
-                ctx.textBaseline = "middle";
-                const sliceColor = wheelColors[i % wheelColors.length].toLowerCase();
-                if (activePreset === 'nutrieye') {
-                    const lightSlices = ['#f4df9a', '#fff4cf'];
-                    ctx.fillStyle = lightSlices.includes(sliceColor) ? '#0f5f5c' : '#ffffff';
-                } else if (activePreset === 'jujigrainz') {
-                    const lightSlices = ['#f2b7c9', '#fff4f7', '#f7d5e1'];
-                    ctx.fillStyle = lightSlices.includes(sliceColor) ? '#8b193d' : '#ffffff';
-                } else {
-                    ctx.fillStyle = "#ffffff";
-                }
 
-                let fontSize = wheelNames.length > 20 ? 20 : (wheelNames.length > 12 ? 26 : 32);
-                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                ctx.beginPath();
 
-                ctx.shadowColor = activePreset === 'nutrieye' ? "rgba(15,95,92,0.28)" : (activePreset === 'jujigrainz' ? "rgba(139,25,61,0.20)" : "rgba(0,0,0,0.5)");
-                ctx.shadowBlur = activePreset === 'classic' ? 4 : 2;
-                ctx.shadowOffsetX = 1;
-                ctx.shadowOffsetY = 1;
 
-                const textX = radius - 30;
-                ctx.fillText(wheelNames[i], textX, 0, radius - 80);
+                ctx.moveTo(
+                    centerX,
+                    centerY
+                );
+
+
+                ctx.arc(
+                    centerX,
+                    centerY,
+                    radius,
+                    startAngle,
+                    endAngle
+                );
+
+
+                ctx.closePath();
+
+
+                ctx.fillStyle =
+                "rgba(15,23,42,.58)";
+
+
+                ctx.fill();
+
+
                 ctx.restore();
             }
 
-            if (activePreset === 'nutrieye') {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius - 2, 0, Math.PI * 2);
-                ctx.lineWidth = 14;
-                ctx.strokeStyle = '#0f5f5c';
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius - 12, 0, Math.PI * 2);
-                ctx.lineWidth = 4;
-                ctx.strokeStyle = '#e5b500';
-                ctx.stroke();
-            } else if (activePreset === 'jujigrainz') {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius - 2, 0, Math.PI * 2);
-                ctx.lineWidth = 14;
-                ctx.strokeStyle = '#b12f53';
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius - 12, 0, Math.PI * 2);
-                ctx.lineWidth = 5;
-                ctx.strokeStyle = '#f6d0dc';
-                ctx.stroke();
+
+
+            ctx.lineWidth =
+            activePreset ===
+            "classic"
+            ?
+            4
+            :
+            5;
+
+
+            ctx.strokeStyle =
+            activePreset ===
+            "classic"
+            ?
+            "rgba(0,0,0,.2)"
+            :
+            "rgba(255,255,255,.6)";
+
+
+            ctx.stroke();
+
+
+
+            ctx.save();
+
+
+            ctx.translate(
+                centerX,
+                centerY
+            );
+
+
+            ctx.rotate(
+                startAngle +
+                sliceAngle /
+                2
+            );
+
+
+            ctx.textAlign =
+            "right";
+
+
+            ctx.textBaseline =
+            "middle";
+
+
+            ctx.fillStyle =
+            entry.locked
+            ?
+            "#d1d5db"
+            :
+            "#ffffff";
+
+
+            let fontSize =
+            wheelEntries.length >
+            20
+            ?
+            19
+            :
+            wheelEntries.length >
+            12
+            ?
+            24
+            :
+            31;
+
+
+            ctx.font =
+            `bold ${fontSize}px Inter`;
+
+
+            ctx.shadowColor =
+            "rgba(0,0,0,.4)";
+
+
+            ctx.shadowBlur =
+            3;
+
+
+            const label =
+            entry.locked
+            ?
+            `🔒 ${entry.name}`
+            :
+            entry.name;
+
+
+            ctx.fillText(
+                label,
+                radius - 30,
+                0,
+                radius - 85
+            );
+
+
+            ctx.restore();
+
+        }
+    );
+
+
+
+    /*
+    Premium outer rings
+    */
+
+    if (
+        activePreset ===
+        "nutrieye"
+    ) {
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            radius - 3,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.lineWidth =
+        14;
+
+        ctx.strokeStyle =
+        "#0f5f5c";
+
+        ctx.stroke();
+    }
+
+
+    if (
+        activePreset ===
+        "jujigrainz"
+    ) {
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            radius - 3,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.lineWidth =
+        14;
+
+        ctx.strokeStyle =
+        "#b12f53";
+
+        ctx.stroke();
+    }
+
+
+
+    /*
+    center
+    */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        centerX,
+        centerY,
+        radius *
+        .05,
+        0,
+        Math.PI *
+        2
+    );
+
+
+    ctx.fillStyle =
+    activePreset ===
+    "classic"
+    ?
+    "#1e293b"
+    :
+    "#ffffff";
+
+
+    ctx.fill();
+
+}
+
+
+
+/* =============================================================
+   CONFETTI
+============================================================= */
+
+function triggerConfetti() {
+
+    const end =
+    Date.now() +
+    4000;
+
+
+    (
+        function frame() {
+
+            confetti({
+
+                particleCount:
+                5,
+
+                angle:
+                60,
+
+                spread:
+                55,
+
+                origin: {
+                    x:
+                    0
+                },
+
+                colors:
+                wheelColors
+
+            });
+
+
+            confetti({
+
+                particleCount:
+                5,
+
+                angle:
+                120,
+
+                spread:
+                55,
+
+                origin: {
+                    x:
+                    1
+                },
+
+                colors:
+                wheelColors
+
+            });
+
+
+            if (
+                Date.now() <
+                end
+            ) {
+
+                requestAnimationFrame(
+                    frame
+                );
             }
 
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius * 0.05, 0, Math.PI * 2);
-            ctx.fillStyle = activePreset === 'nutrieye' ? "#fff4cf" : (activePreset === 'jujigrainz' ? "#fff7fb" : "#1e293b");
-            ctx.fill();
-            if (activePreset === 'nutrieye') {
-                ctx.lineWidth = 7;
-                ctx.strokeStyle = '#0f5f5c';
-                ctx.stroke();
-            } else if (activePreset === 'jujigrainz') {
-                ctx.lineWidth = 7;
-                ctx.strokeStyle = '#b12f53';
-                ctx.stroke();
-            }
+        }
+    )();
+}
+
+
+
+/* =============================================================
+   SPIN ANIMATION
+============================================================= */
+
+function easeOutCubic(
+    t
+) {
+
+    return (
+        1 -
+        Math.pow(
+            1 - t,
+            3
+        )
+    );
+}
+
+
+
+function triggerSpinVisuals(
+    targetIndex,
+    payload
+) {
+
+    if (
+        !Number.isInteger(
+            targetIndex
+        ) ||
+        targetIndex < 0 ||
+        targetIndex >=
+        wheelEntries.length
+    ) {
+
+        return;
+    }
+
+
+    isSpinning =
+    true;
+
+
+    displaySpinBtn.disabled =
+    true;
+
+
+    displaySpinBtn.textContent =
+    "SPINNING...";
+
+
+    hideWinnerModal();
+
+
+
+    const sliceAngle =
+    360 /
+    wheelEntries.length;
+
+
+    const targetCenter =
+    targetIndex *
+    sliceAngle +
+    sliceAngle /
+    2;
+
+
+    let required =
+    (
+        270 -
+        targetCenter
+    ) %
+    360;
+
+
+    if (
+        required < 0
+    ) {
+
+        required +=
+        360;
+    }
+
+
+    const currentMod =
+    currentRotation %
+    360;
+
+
+    let delta =
+    required -
+    currentMod;
+
+
+    if (
+        delta < 0
+    ) {
+
+        delta +=
+        360;
+    }
+
+
+    /*
+    Small jitter, but safely inside winning slice.
+    */
+
+    const jitter =
+    (
+        Math.random() -
+        .5
+    ) *
+    (
+        sliceAngle *
+        .45
+    );
+
+
+    const targetRotation =
+    currentRotation +
+    delta +
+    2160 +
+    jitter;
+
+
+    const start =
+    performance.now();
+
+
+    const original =
+    currentRotation;
+
+
+    const duration =
+    5500;
+
+
+
+    function animate(
+        now
+    ) {
+
+        let progress =
+        (
+            now -
+            start
+        ) /
+        duration;
+
+
+        if (
+            progress >
+            1
+        ) {
+
+            progress =
+            1;
         }
 
-        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-        function triggerConfetti() {
-            const duration = 4000;
-            const end = Date.now() + duration;
+        const eased =
+        easeOutCubic(
+            progress
+        );
 
-            (function frame() {
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: wheelColors, zIndex: 100 });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: wheelColors, zIndex: 100 });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
+
+        currentRotation =
+        original +
+        (
+            targetRotation -
+            original
+        ) *
+        eased;
+
+
+        drawWheel();
+
+
+        if (
+            progress <
+            1
+        ) {
+
+            requestAnimationFrame(
+                animate
+            );
+
+        }
+        else {
+
+            isSpinning =
+            false;
+
+
+            displaySpinBtn.disabled =
+            getEligibleIndices(
+                wheelEntries
+            ).length ===
+            0;
+
+
+            displaySpinBtn.textContent =
+            "SPIN THE WHEEL";
+
+
+            showWinnerModal(
+                payload
+            );
+
+
+            triggerConfetti();
+        }
+    }
+
+
+    requestAnimationFrame(
+        animate
+    );
+}
+
+
+
+/* =============================================================
+   WINNER MODAL
+============================================================= */
+
+function showWinnerModal(
+    payload
+) {
+
+    if (
+        !payload ||
+        !payload.prize
+    ) {
+
+        return;
+    }
+
+
+    winnerTitle.textContent =
+    `Congrats ${
+        payload.displayName ||
+        "You"
+    } Won`;
+
+
+    winnerText.textContent =
+    payload.prize;
+
+
+    winnerModal
+    .classList
+    .remove(
+        "opacity-0",
+        "pointer-events-none"
+    );
+
+
+    winnerPanel
+    .classList
+    .remove(
+        "scale-95"
+    );
+
+
+    winnerPanel
+    .classList
+    .add(
+        "scale-100"
+    );
+}
+
+
+
+function hideWinnerModal() {
+
+    winnerModal
+    .classList
+    .add(
+        "opacity-0",
+        "pointer-events-none"
+    );
+
+
+    winnerPanel
+    .classList
+    .remove(
+        "scale-100"
+    );
+
+
+    winnerPanel
+    .classList
+    .add(
+        "scale-95"
+    );
+}
+
+
+
+winnerModal
+.addEventListener(
+    "click",
+    async event => {
+
+        if (
+            event.target !==
+            winnerModal
+        ) {
+
+            return;
         }
 
-        function triggerSpinVisuals(targetIndex, winnerPayload) {
-            if (wheelNames.length === 0) return;
-            if (!Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= wheelNames.length) {
-                console.error('Invalid winner index received:', targetIndex);
-                return;
-            }
 
-            isSpinning = true;
-            if (displaySpinBtn) {
-                displaySpinBtn.disabled = true;
-                displaySpinBtn.textContent = 'SPINNING...';
-            }
-            hideWinnerModal();
+        hideWinnerModal();
 
-            const sliceAngleDeg = 360 / wheelNames.length;
-            const targetSliceCenterLocal = targetIndex * sliceAngleDeg + (sliceAngleDeg / 2);
 
-            let requiredFinalMod = (270 - targetSliceCenterLocal) % 360;
-            if (requiredFinalMod < 0) requiredFinalMod += 360;
+        try {
 
-            const extraSpins = 6 * 360;
-            const currentMod = currentRotation % 360;
-            let deltaRotation = (requiredFinalMod - currentMod);
-            if (deltaRotation < 0) deltaRotation += 360;
+            await updateState({
 
-            const randomJitter = (Math.random() - 0.5) * (sliceAngleDeg * 0.7);
-            const targetRotation = currentRotation + deltaRotation + extraSpins + randomJitter;
+                show_winner_modal:
+                false
 
-            const duration = 5500;
-            const startTime = performance.now();
-            const initialRotation = currentRotation;
+            });
 
-            function animate(currentTime) {
-                const elapsed = currentTime - startTime;
-                let progress = elapsed / duration;
-                if (progress >= 1) progress = 1;
+        }
+        catch (
+            error
+        ) {
 
-                const easeProgress = easeOutCubic(progress);
-                currentRotation = initialRotation + (targetRotation - initialRotation) * easeProgress;
+            console.error(
+                error
+            );
+        }
+    }
+);
 
-                drawWheel();
 
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    isSpinning = false;
-                    if (displaySpinBtn) {
-                        displaySpinBtn.disabled = wheelNames.length === 0;
-                        displaySpinBtn.textContent = 'SPIN THE WHEEL';
+
+/* =============================================================
+   DISPLAY
+============================================================= */
+
+function handleDisplayState(
+    state,
+    initial =
+    false
+) {
+
+    if (
+        !isSpinning
+    ) {
+
+        wheelEntries =
+        normalizeEntries(
+            state.names
+        );
+
+
+        drawWheel();
+
+
+        displaySpinBtn.disabled =
+        getEligibleIndices(
+            wheelEntries
+        ).length ===
+        0;
+    }
+
+
+    const timestamp =
+    Number(
+        state.spin_timestamp ||
+        0
+    );
+
+
+    if (
+        initial
+    ) {
+
+        lastSpinTimestamp =
+        timestamp;
+    }
+    else if (
+        timestamp >
+        lastSpinTimestamp
+    ) {
+
+        lastSpinTimestamp =
+        timestamp;
+
+
+        triggerSpinVisuals(
+
+            Number(
+                state.winner_index
+            ),
+
+            parseWinnerPayload(
+                state.winner_name
+            )
+
+        );
+    }
+
+
+    if (
+        state.show_winner_modal &&
+        !isSpinning
+    ) {
+
+        showWinnerModal(
+            parseWinnerPayload(
+                state.winner_name
+            )
+        );
+    }
+    else if (
+        !state.show_winner_modal
+    ) {
+
+        hideWinnerModal();
+    }
+}
+
+
+
+async function initDisplay() {
+
+    if (
+        displayInitialized
+    ) {
+
+        return;
+    }
+
+
+    displayInitialized =
+    true;
+
+
+    try {
+
+        const state =
+        await fetchState();
+
+
+        handleDisplayState(
+            state,
+            true
+        );
+
+    }
+    catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+    }
+
+
+    displayChannel =
+    supabase
+    .channel(
+        "display"
+    )
+    .on(
+        "postgres_changes",
+
+        {
+
+            event:
+            "UPDATE",
+
+            schema:
+            "public",
+
+            table:
+            STATE_TABLE,
+
+            filter:
+            `id=eq.${STATE_ID}`
+
+        },
+
+        payload => {
+
+            handleDisplayState(
+                payload.new
+            );
+
+        }
+
+    )
+    .subscribe();
+}
+
+
+
+/* =============================================================
+   PUBLIC SPIN
+============================================================= */
+
+displaySpinBtn
+.addEventListener(
+    "click",
+    spinFromDisplay
+);
+
+
+
+async function spinFromDisplay() {
+
+    if (
+        isSpinning
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        const state =
+        await fetchState();
+
+
+        const entries =
+        normalizeEntries(
+            state.names
+        );
+
+
+        const eligible =
+        getEligibleIndices(
+            entries
+        );
+
+
+        if (
+            eligible.length ===
+            0
+        ) {
+
+            alert(
+                "No eligible prizes available. All items are locked."
+            );
+
+            return;
+        }
+
+
+        /*
+        The current winner_index acts as
+        the Backroom rigged result.
+        */
+
+
+        const armedIndex =
+        Number(
+            state.winner_index
+        );
+
+
+        /*
+        chooseTargetIndex automatically ignores
+        locked rigged items.
+        */
+
+
+        const targetIndex =
+        chooseTargetIndex(
+            entries,
+            armedIndex
+        );
+
+
+        const winner =
+        entries[
+            targetIndex
+        ];
+
+
+        const previous =
+        parseWinnerPayload(
+            state.winner_name
+        );
+
+
+        const payload =
+        buildWinnerPayload(
+
+            winner.name,
+
+            previous.displayName
+
+        );
+
+
+        const timestamp =
+        Date.now();
+
+
+        await updateState({
+
+            spin_timestamp:
+            timestamp,
+
+            winner_index:
+            targetIndex,
+
+            winner_name:
+            payload,
+
+            show_winner_modal:
+            true
+
+        });
+
+
+
+        /*
+        Clean up after spin.
+        */
+
+
+        setTimeout(
+            async () => {
+
+                try {
+
+                    const latest =
+                    await fetchState();
+
+
+                    let latestEntries =
+                    normalizeEntries(
+                        latest.names
+                    );
+
+
+                    const updates =
+                    {};
+
+
+                    /*
+                    auto-remove winner
+                    */
+
+
+                    if (
+                        state.remove_winner ===
+                        true
+                    ) {
+
+                        const removeIndex =
+                        latestEntries
+                        .findIndex(
+                            entry =>
+                            entry.name ===
+                            winner.name &&
+                            !entry.locked
+                        );
+
+
+                        if (
+                            removeIndex >
+                            -1
+                        ) {
+
+                            latestEntries.splice(
+                                removeIndex,
+                                1
+                            );
+
+
+                            updates.names =
+                            latestEntries;
+                        }
                     }
-                    showWinnerModal(winnerPayload);
-                    triggerConfetti();
-                }
-            }
-            requestAnimationFrame(animate);
-        }
 
-        function showWinnerModal(payload) {
-            const prize = payload?.prize || '';
-            const displayName = (payload?.displayName || '').trim();
-            if (!prize) return;
-            winnerTitle.textContent = `Congrats ${displayName || 'You'} Won`;
-            winnerText.textContent = prize;
-            winnerModal.classList.remove('pointer-events-none');
-            winnerModal.classList.remove('opacity-0');
-            winnerPanel.classList.remove('scale-95');
-            winnerPanel.classList.add('scale-100');
-        }
 
-        function hideWinnerModal() {
-            winnerModal.classList.add('opacity-0');
-            winnerModal.classList.add('pointer-events-none');
-            winnerPanel.classList.remove('scale-100');
-            winnerPanel.classList.add('scale-95');
-        }
+                    /*
+                    clear the rigged result
+                    only if nobody armed another
+                    result while spinning
+                    */
 
-        async function dismissWinnerFromDisplay() {
-            // Hide immediately for a responsive front-end experience, then sync the state.
-            hideWinnerModal();
-            try {
-                await updateState({ show_winner_modal: false });
-            } catch (error) {
-                console.error('Error syncing winner dismissal from display:', error);
-            }
-        }
 
-        async function triggerSpinFromDisplay() {
-            if (!isSupabaseReady || isSpinning) return;
+                    if (
+                        Number(
+                            latest.spin_timestamp
+                        ) ===
+                        timestamp &&
+                        Number(
+                            latest.winner_index
+                        ) ===
+                        targetIndex
+                    ) {
 
-            try {
-                const state = await fetchState();
-                const names = Array.isArray(state.names) ? state.names : [];
-                if (names.length === 0) return;
-
-                // The backroom controller stores the armed/rigged result in winner_index.
-                // If no valid result is armed, the front-end spin remains random.
-                const armedIndex = Number(state.winner_index);
-                const hasArmedWinner = Number.isInteger(armedIndex) && armedIndex >= 0 && armedIndex < names.length;
-                const targetIndex = hasArmedWinner ? armedIndex : Math.floor(Math.random() * names.length);
-                const winnerName = names[targetIndex];
-                const winnerPayload = buildWinnerPayload(winnerName, '');
-                const spinTimestamp = Date.now();
-
-                if (displaySpinBtn) {
-                    displaySpinBtn.disabled = true;
-                    displaySpinBtn.textContent = 'SPINNING...';
-                }
-
-                // Updating Supabase triggers this exact result on every connected display/controller.
-                await updateState({
-                    names,
-                    remove_winner: state.remove_winner === true,
-                    spin_timestamp: spinTimestamp,
-                    winner_index: targetIndex,
-                    winner_name: winnerPayload,
-                    show_winner_modal: true
-                });
-
-                // After the animation, clear the armed result so the next spin is fair unless
-                // the backroom chooses another rigged winner. Auto-remove remains synchronized.
-                setTimeout(async () => {
-                    try {
-                        const latest = await fetchState();
-                        const updates = {};
-
-                        // Only clear if nobody armed a different winner during the animation.
-                        if (Number(latest.spin_timestamp) === spinTimestamp && Number(latest.winner_index) === targetIndex) {
-                            updates.winner_index = -1;
-                        }
-
-                        if (state.remove_winner === true) {
-                            const latestNames = Array.isArray(latest.names) ? [...latest.names] : [];
-                            const removeIndex = latestNames.indexOf(winnerName);
-                            if (removeIndex > -1) {
-                                latestNames.splice(removeIndex, 1);
-                                updates.names = latestNames;
-                            }
-                        }
-
-                        if (Object.keys(updates).length > 0) {
-                            await updateState(updates);
-                        }
-                    } catch (error) {
-                        console.error('Error finalizing display spin:', error);
+                        updates.winner_index =
+                        -1;
                     }
-                }, 6000);
-            } catch (error) {
-                console.error('Error triggering spin from display:', error);
-                if (displaySpinBtn) {
-                    displaySpinBtn.disabled = wheelNames.length === 0;
-                    displaySpinBtn.textContent = 'SPIN THE WHEEL';
-                }
-            }
-        }
 
-        function applyControllerState(data) {
-            if (!data) return;
 
-            const names = Array.isArray(data.names) ? data.names : [];
+                    if (
+                        Object.keys(
+                            updates
+                        ).length >
+                        0
+                    ) {
 
-            // Only update textarea if user isn't currently typing to avoid losing changes.
-            if (document.activeElement !== ctrlNames) {
-                ctrlNames.value = names.join('\n');
-                updateControllerCount();
-                updateRigDropdown(names);
-
-                // When no winner screen is active, winner_index doubles as the currently
-                // armed backroom result for a front-end spin.
-                const armedIndex = Number(data.winner_index);
-                if (!data.show_winner_modal && Number.isInteger(armedIndex) && armedIndex >= 0 && armedIndex < names.length) {
-                    ctrlRig.value = names[armedIndex];
-                } else if (!data.show_winner_modal && armedIndex === -1) {
-                    ctrlRig.value = '';
-                }
-            }
-
-            ctrlRemove.checked = data.remove_winner === true;
-
-            if (data.show_winner_modal) {
-                btnDismissWinner.disabled = false;
-                btnDismissWinner.classList.replace('bg-slate-600', 'bg-indigo-600');
-            } else {
-                btnDismissWinner.disabled = true;
-                btnDismissWinner.classList.replace('bg-indigo-600', 'bg-slate-600');
-            }
-        }
-
-        async function initController() {
-            if (controllerInitialized) return;
-            controllerInitialized = true;
-
-            try {
-                const initialState = await fetchState();
-                applyControllerState(initialState);
-            } catch (error) {
-                console.error("Controller initial load error:", error);
-            }
-
-            controllerChannel = supabase
-                .channel('lucky-draw-controller')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: STATE_TABLE,
-                        filter: `id=eq.${STATE_ID}`
-                    },
-                    (payload) => applyControllerState(payload.new)
-                )
-                .subscribe((status) => {
-                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                        console.error('Controller realtime channel status:', status);
+                        await updateState(
+                            updates
+                        );
                     }
-                });
 
-            // UI Listeners
-            ctrlNames.addEventListener('input', updateControllerCount);
-
-            // Arm the selected result immediately so a spin started on the public wheel
-            // lands on the same result chosen in the backroom.
-            ctrlRig.addEventListener('change', async () => {
-                const names = parseTextArea();
-                const riggedName = ctrlRig.value;
-                const armedIndex = riggedName && names.includes(riggedName) ? names.indexOf(riggedName) : -1;
-                try {
-                    await updateState({ winner_index: armedIndex });
-                } catch (error) {
-                    console.error('Error syncing rigged winner selection:', error);
                 }
-            });
+                catch (
+                    error
+                ) {
 
-            btnUpdateList.addEventListener('click', async () => {
-                const names = parseTextArea();
-                btnUpdateList.textContent = "Updating...";
-                btnUpdateList.disabled = true;
-
-                try {
-                    const armedName = ctrlRig.value;
-                    const armedIndex = armedName && names.includes(armedName) ? names.indexOf(armedName) : -1;
-                    await updateState({
-                        names,
-                        remove_winner: ctrlRemove.checked,
-                        winner_index: armedIndex
-                    });
-                    updateRigDropdown(names);
-                    btnUpdateList.textContent = "Sync List to Display";
-                } catch (e) {
-                    console.error("Error updating list", e);
-                    btnUpdateList.textContent = "Error!";
-                    setTimeout(() => btnUpdateList.textContent = "Sync List to Display", 2000);
-                } finally {
-                    btnUpdateList.disabled = false;
-                }
-            });
-
-            btnDismissWinner.addEventListener('click', async () => {
-                try {
-                    await updateState({ show_winner_modal: false });
-                } catch (e) {
-                    console.error("Error dismissing winner", e);
-                }
-            });
-
-            btnSpin.addEventListener('click', async () => {
-                const names = parseTextArea();
-                if (names.length === 0) return;
-
-                btnSpin.disabled = true;
-                btnSpin.textContent = "SPINNING...";
-
-                const riggedName = ctrlRig.value;
-                let targetIndex = -1;
-
-                if (riggedName && names.includes(riggedName)) {
-                    targetIndex = names.indexOf(riggedName);
-                } else {
-                    targetIndex = Math.floor(Math.random() * names.length);
+                    console.error(
+                        error
+                    );
                 }
 
-                const winnerName = names[targetIndex];
-                const effectDisplayName = (ctrlDisplayName?.value || '').trim();
-                const winnerPayload = buildWinnerPayload(winnerName, effectDisplayName);
-                const spinTimestamp = Date.now();
+            },
+            6000
+        );
 
-                try {
-                    await updateState({
-                        names,
-                        remove_winner: ctrlRemove.checked,
-                        spin_timestamp: spinTimestamp,
-                        winner_index: targetIndex,
-                        winner_name: winnerPayload,
-                        show_winner_modal: true
-                    });
+    }
+    catch (
+        error
+    ) {
 
-                    // Wait for the display animation (about 5.5s) before optionally removing the winner.
-                    setTimeout(async () => {
-                        btnSpin.disabled = false;
-                        btnSpin.textContent = "SPIN WHEEL!";
+        console.error(
+            error
+        );
+    }
+}
 
-                        if (ctrlRemove.checked) {
-                            const currentNames = parseTextArea();
-                            const idx = currentNames.indexOf(winnerName);
-                            if (idx > -1) {
-                                currentNames.splice(idx, 1);
-                                ctrlNames.value = currentNames.join('\n');
-                                updateControllerCount();
-                                updateRigDropdown(currentNames);
 
-                                try {
-                                    await updateState({ names: currentNames });
-                                } catch (e) {
-                                    console.error("Error removing winner from shared list", e);
-                                }
-                            }
-                        }
 
-                        if (ctrlRig.value === winnerName) {
-                            ctrlRig.value = "";
-                        }
+/* =============================================================
+   CONTROLLER HELPERS
+============================================================= */
 
-                        // Clear the armed result after this spin, but do not overwrite a
-                        // different winner that may have been armed while the wheel was spinning.
-                        try {
-                            const latest = await fetchState();
-                            if (Number(latest.spin_timestamp) === spinTimestamp && Number(latest.winner_index) === targetIndex) {
-                                await updateState({ winner_index: -1 });
-                            }
-                        } catch (error) {
-                            console.error('Error clearing rigged winner after spin:', error);
-                        }
-                    }, 6000);
+function parseTextArea() {
 
-                } catch (e) {
-                    console.error("Error triggering spin", e);
-                    btnSpin.disabled = false;
-                    btnSpin.textContent = "SPIN WHEEL!";
-                }
-            });
-        }
+    return ctrlNames
+    .value
+    .split(
+        "\n"
+    )
+    .map(
+        item =>
+        item.trim()
+    )
+    .filter(
+        Boolean
+    );
+}
 
-        function parseTextArea() {
-            return ctrlNames.value.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-        }
 
-        function updateControllerCount() {
-            const count = parseTextArea().length;
-            ctrlCount.textContent = `${count} names`;
-        }
 
-        function updateRigDropdown(namesArray) {
-            const currentSelection = ctrlRig.value;
-            ctrlRig.innerHTML = '<option value="">-- Fair Spin (Random) --</option>';
-            namesArray.forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                if (name === currentSelection) opt.selected = true;
-                ctrlRig.appendChild(opt);
-            });
-        }
+function getCurrentLockedNames() {
 
-        controllerPasswordInput?.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                submitControllerLogin();
+    const locked =
+    new Set();
+
+
+    lockList
+    .querySelectorAll(
+        "input[data-lock-name]"
+    )
+    .forEach(
+        checkbox => {
+
+            if (
+                checkbox.checked
+            ) {
+
+                locked.add(
+                    checkbox.dataset.lockName
+                );
             }
-        });
+        }
+    );
 
-        displaySpinBtn?.addEventListener('click', triggerSpinFromDisplay);
 
-        winnerModal?.addEventListener('click', (event) => {
-            // Only dismiss when the user clicks the dark area outside the winner card.
-            if (event.target === winnerModal) {
-                dismissWinnerFromDisplay();
+    return locked;
+}
+
+
+
+function buildEntriesFromController() {
+
+    const names =
+    parseTextArea();
+
+
+    const locked =
+    getCurrentLockedNames();
+
+
+    return names.map(
+        name => ({
+
+            name,
+
+            locked:
+            locked.has(
+                name
+            )
+
+        })
+    );
+}
+
+
+
+function updateCount() {
+
+    const count =
+    parseTextArea()
+    .length;
+
+
+    ctrlCount.textContent =
+    `${count} items`;
+}
+
+
+
+function renderLockList(
+    entries
+) {
+
+    if (
+        entries.length ===
+        0
+    ) {
+
+        lockList.innerHTML =
+        `
+        <p class="text-sm text-slate-500">
+            Add items above to configure locks.
+        </p>
+        `;
+
+
+        lockedCount.textContent =
+        "0 locked";
+
+
+        return;
+    }
+
+
+    lockList.innerHTML =
+    "";
+
+
+    entries.forEach(
+        (
+            entry,
+            index
+        ) => {
+
+            const row =
+            document.createElement(
+                "label"
+            );
+
+
+            row.className =
+            `
+            lock-item
+            flex
+            items-center
+            justify-between
+            gap-3
+            border
+            border-slate-700
+            rounded-xl
+            px-3
+            py-2
+            cursor-pointer
+            ${
+                entry.locked
+                ?
+                "locked"
+                :
+                ""
             }
+            `;
+
+
+            row.innerHTML =
+            `
+            <div class="flex items-center gap-3 min-w-0">
+
+                <input
+                    type="checkbox"
+                    data-lock-index="${index}"
+                    data-lock-name="${escapeHtml(entry.name)}"
+                    ${entry.locked ? "checked" : ""}
+                    class="w-4 h-4"
+                >
+
+                <span
+                    class="text-sm text-slate-200 truncate"
+                >
+                    ${escapeHtml(entry.name)}
+                </span>
+
+            </div>
+
+            <span
+                class="text-xs ${
+                    entry.locked
+                    ?
+                    "text-red-300"
+                    :
+                    "text-slate-500"
+                }"
+            >
+                ${
+                    entry.locked
+                    ?
+                    "🔒 Locked"
+                    :
+                    "Eligible"
+                }
+            </span>
+            `;
+
+
+            lockList.appendChild(
+                row
+            );
+        }
+    );
+
+
+    refreshLockedCount();
+}
+
+
+
+function refreshLockedCount() {
+
+    const count =
+    lockList
+    .querySelectorAll(
+        "input[data-lock-name]:checked"
+    )
+    .length;
+
+
+    lockedCount.textContent =
+    `${count} locked`;
+
+
+    const entries =
+    buildEntriesFromController();
+
+
+    const eligible =
+    getEligibleIndices(
+        entries
+    );
+
+
+    if (
+        eligible.length ===
+        0 &&
+        entries.length >
+        0
+    ) {
+
+        eligibilityStatus.textContent =
+        "⚠ All items are locked. Wheel cannot spin.";
+
+
+        eligibilityStatus.className =
+        "text-center text-sm text-red-400 mt-4";
+
+
+        btnSpin.disabled =
+        true;
+
+    }
+    else {
+
+        eligibilityStatus.textContent =
+        `${eligible.length} eligible item${
+            eligible.length ===
+            1
+            ?
+            ""
+            :
+            "s"
+        }`;
+
+
+        eligibilityStatus.className =
+        "text-center text-sm text-emerald-400 mt-4";
+
+
+        btnSpin.disabled =
+        false;
+    }
+}
+
+
+
+function renderRigDropdown(
+    entries,
+    preferredIndex =
+    null
+) {
+
+    const oldValue =
+    ctrlRig.value;
+
+
+    ctrlRig.innerHTML =
+    `
+    <option value="">
+        -- Fair Spin (Random) --
+    </option>
+    `;
+
+
+    entries.forEach(
+        (
+            entry,
+            index
+        ) => {
+
+            const option =
+            document.createElement(
+                "option"
+            );
+
+
+            option.value =
+            String(
+                index
+            );
+
+
+            option.textContent =
+            entry.locked
+            ?
+            `🔒 ${entry.name}`
+            :
+            entry.name;
+
+
+            ctrlRig.appendChild(
+                option
+            );
+        }
+    );
+
+
+    if (
+        preferredIndex !==
+        null &&
+        preferredIndex >=
+        0 &&
+        preferredIndex <
+        entries.length
+    ) {
+
+        ctrlRig.value =
+        String(
+            preferredIndex
+        );
+
+    }
+    else if (
+        oldValue !==
+        "" &&
+        Number(
+            oldValue
+        ) <
+        entries.length
+    ) {
+
+        ctrlRig.value =
+        oldValue;
+    }
+}
+
+
+
+function escapeHtml(
+    text
+) {
+
+    const div =
+    document.createElement(
+        "div"
+    );
+
+
+    div.textContent =
+    text;
+
+
+    return div.innerHTML;
+}
+
+
+
+/* =============================================================
+   TEXTAREA CHANGES
+============================================================= */
+
+ctrlNames
+.addEventListener(
+    "input",
+    () => {
+
+        updateCount();
+
+
+        clearTimeout(
+            inputRefreshTimer
+        );
+
+
+        inputRefreshTimer =
+        setTimeout(
+            () => {
+
+                /*
+                Preserve existing locked names
+                when refreshing list.
+                */
+
+                const locked =
+                getCurrentLockedNames();
+
+
+                const entries =
+                parseTextArea()
+                .map(
+                    name => ({
+
+                        name,
+
+                        locked:
+                        locked.has(
+                            name
+                        )
+
+                    })
+                );
+
+
+                renderLockList(
+                    entries
+                );
+
+
+                renderRigDropdown(
+                    entries
+                );
+
+            },
+            250
+        );
+    }
+);
+
+
+
+/* =============================================================
+   LOCK CHANGE
+============================================================= */
+
+lockList
+.addEventListener(
+    "change",
+    async event => {
+
+        const checkbox =
+        event.target.closest(
+            "input[data-lock-name]"
+        );
+
+
+        if (
+            !checkbox
+        ) {
+
+            return;
+        }
+
+
+        const entries =
+        buildEntriesFromController();
+
+
+        renderLockList(
+            entries
+        );
+
+
+        renderRigDropdown(
+            entries
+        );
+
+
+        refreshLockedCount();
+
+
+        /*
+        Lock changes sync immediately.
+        */
+
+
+        try {
+
+            const rigIndex =
+            ctrlRig.value ===
+            ""
+            ?
+            -1
+            :
+            Number(
+                ctrlRig.value
+            );
+
+
+            await updateState({
+
+                names:
+                entries,
+
+                winner_index:
+                rigIndex
+
+            });
+
+        }
+        catch (
+            error
+        ) {
+
+            console.error(
+                "Lock sync failed",
+                error
+            );
+        }
+    }
+);
+
+
+
+/* =============================================================
+   CONTROLLER STATE
+============================================================= */
+
+function applyControllerState(
+    state
+) {
+
+    const entries =
+    normalizeEntries(
+        state.names
+    );
+
+
+    if (
+        document.activeElement !==
+        ctrlNames
+    ) {
+
+        ctrlNames.value =
+        entries
+        .map(
+            entry =>
+            entry.name
+        )
+        .join(
+            "\n"
+        );
+
+
+        updateCount();
+
+
+        renderLockList(
+            entries
+        );
+
+
+        const armedIndex =
+        Number(
+            state.winner_index
+        );
+
+
+        renderRigDropdown(
+
+            entries,
+
+            (
+                !state.show_winner_modal &&
+                Number.isInteger(
+                    armedIndex
+                ) &&
+                armedIndex >=
+                0
+            )
+            ?
+            armedIndex
+            :
+            null
+
+        );
+    }
+
+
+    ctrlRemove.checked =
+    state.remove_winner ===
+    true;
+
+
+    btnDismissWinner.disabled =
+    !state.show_winner_modal;
+
+
+    refreshLockedCount();
+}
+
+
+
+/* =============================================================
+   CONTROLLER INIT
+============================================================= */
+
+async function initController() {
+
+    if (
+        controllerInitialized
+    ) {
+
+        return;
+    }
+
+
+    controllerInitialized =
+    true;
+
+
+    const state =
+    await fetchState();
+
+
+    applyControllerState(
+        state
+    );
+
+
+    controllerChannel =
+    supabase
+    .channel(
+        "controller"
+    )
+    .on(
+        "postgres_changes",
+
+        {
+
+            event:
+            "UPDATE",
+
+            schema:
+            "public",
+
+            table:
+            STATE_TABLE,
+
+            filter:
+            `id=eq.${STATE_ID}`
+
+        },
+
+        payload => {
+
+            applyControllerState(
+                payload.new
+            );
+
+        }
+
+    )
+    .subscribe();
+
+}
+
+
+
+/* =============================================================
+   RIGGED WINNER CHANGE
+============================================================= */
+
+ctrlRig
+.addEventListener(
+    "change",
+    async () => {
+
+        const value =
+        ctrlRig.value;
+
+
+        const armedIndex =
+        value ===
+        ""
+        ?
+        -1
+        :
+        Number(
+            value
+        );
+
+
+        try {
+
+            /*
+            We intentionally allow a locked item
+            to be selected here.
+
+            The spin code will detect that it is locked
+            and choose a random eligible result instead.
+            */
+
+
+            await updateState({
+
+                winner_index:
+                armedIndex
+
+            });
+
+        }
+        catch (
+            error
+        ) {
+
+            console.error(
+                error
+            );
+        }
+    }
+);
+
+
+
+/* =============================================================
+   SYNC LIST
+============================================================= */
+
+btnUpdateList
+.addEventListener(
+    "click",
+    async () => {
+
+        const entries =
+        buildEntriesFromController();
+
+
+        const rigIndex =
+        ctrlRig.value ===
+        ""
+        ?
+        -1
+        :
+        Number(
+            ctrlRig.value
+        );
+
+
+        btnUpdateList.disabled =
+        true;
+
+
+        btnUpdateList.textContent =
+        "Updating...";
+
+
+        try {
+
+            await updateState({
+
+                names:
+                entries,
+
+                remove_winner:
+                ctrlRemove.checked,
+
+                winner_index:
+                rigIndex
+
+            });
+
+
+            btnUpdateList.textContent =
+            "Sync List to Display";
+
+        }
+        catch (
+            error
+        ) {
+
+            console.error(
+                error
+            );
+
+
+            btnUpdateList.textContent =
+            "Error";
+        }
+
+
+        btnUpdateList.disabled =
+        false;
+    }
+);
+
+
+
+/* =============================================================
+   BACKROOM SPIN
+============================================================= */
+
+btnSpin
+.addEventListener(
+    "click",
+    spinFromController
+);
+
+
+
+async function spinFromController() {
+
+    const entries =
+    buildEntriesFromController();
+
+
+    const eligible =
+    getEligibleIndices(
+        entries
+    );
+
+
+    if (
+        eligible.length ===
+        0
+    ) {
+
+        alert(
+            "No eligible prizes available. Unlock at least one item."
+        );
+
+        return;
+    }
+
+
+    const rigIndex =
+    ctrlRig.value ===
+    ""
+    ?
+    -1
+    :
+    Number(
+        ctrlRig.value
+    );
+
+
+    /*
+    chooseTargetIndex handles the locked-rigged clash.
+    */
+
+
+    const targetIndex =
+    chooseTargetIndex(
+        entries,
+        rigIndex
+    );
+
+
+    const winner =
+    entries[
+        targetIndex
+    ];
+
+
+    const payload =
+    buildWinnerPayload(
+
+        winner.name,
+
+        ctrlDisplayName.value
+
+    );
+
+
+    const timestamp =
+    Date.now();
+
+
+    btnSpin.disabled =
+    true;
+
+
+    btnSpin.textContent =
+    "SPINNING...";
+
+
+    try {
+
+        await updateState({
+
+            names:
+            entries,
+
+            remove_winner:
+            ctrlRemove.checked,
+
+            spin_timestamp:
+            timestamp,
+
+            winner_index:
+            targetIndex,
+
+            winner_name:
+            payload,
+
+            show_winner_modal:
+            true
+
         });
 
-        // Initialize Supabase on load
-        window.addEventListener('DOMContentLoaded', () => {
-            applyWheelPreset(activePreset);
-            if (displaySpinBtn) displaySpinBtn.disabled = true;
-            initSupabase();
-        });
 
-        // Clean up realtime subscriptions when the page is closed/refreshed.
-        window.addEventListener('beforeunload', () => {
-            if (displayChannel) supabase.removeChannel(displayChannel);
-            if (controllerChannel) supabase.removeChannel(controllerChannel);
+
+        setTimeout(
+            async () => {
+
+                btnSpin.textContent =
+                "SPIN WHEEL!";
+
+
+                let latest =
+                await fetchState();
+
+
+                let latestEntries =
+                normalizeEntries(
+                    latest.names
+                );
+
+
+                const updates =
+                {};
+
+
+                if (
+                    ctrlRemove.checked
+                ) {
+
+                    const index =
+                    latestEntries
+                    .findIndex(
+                        entry =>
+                        entry.name ===
+                        winner.name &&
+                        !entry.locked
+                    );
+
+
+                    if (
+                        index >
+                        -1
+                    ) {
+
+                        latestEntries.splice(
+                            index,
+                            1
+                        );
+
+
+                        updates.names =
+                        latestEntries;
+                    }
+                }
+
+
+                if (
+                    Number(
+                        latest.spin_timestamp
+                    ) ===
+                    timestamp &&
+                    Number(
+                        latest.winner_index
+                    ) ===
+                    targetIndex
+                ) {
+
+                    updates.winner_index =
+                    -1;
+                }
+
+
+                if (
+                    Object.keys(
+                        updates
+                    ).length >
+                    0
+                ) {
+
+                    await updateState(
+                        updates
+                    );
+                }
+
+
+                refreshLockedCount();
+
+            },
+            6000
+        );
+
+    }
+    catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+
+
+        btnSpin.disabled =
+        false;
+
+
+        btnSpin.textContent =
+        "SPIN WHEEL!";
+    }
+}
+
+
+
+/* =============================================================
+   DISMISS
+============================================================= */
+
+btnDismissWinner
+.addEventListener(
+    "click",
+    async () => {
+
+        await updateState({
+
+            show_winner_modal:
+            false
+
         });
-    </script>
+    }
+);
+
+
+
+/* =============================================================
+   INIT
+============================================================= */
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        applyWheelPreset(
+            activePreset
+        );
+
+
+        initSupabase();
+    }
+);
+
+
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        if (
+            displayChannel
+        ) {
+
+            supabase
+            .removeChannel(
+                displayChannel
+            );
+        }
+
+
+        if (
+            controllerChannel
+        ) {
+
+            supabase
+            .removeChannel(
+                controllerChannel
+            );
+        }
+    }
+);
+
+</script>
+
 
 </body>
 </html>
