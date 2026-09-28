@@ -725,7 +725,7 @@
 
 
         /* =========================================================
-           LOCK UI
+           LOCK UI - BACKROOM ONLY
         ========================================================= */
 
         .lock-item {
@@ -1278,7 +1278,7 @@
 
 
 
-                <!-- LOCKS -->
+                <!-- SECRET LOCK CONTROLS -->
 
                 <div
                     class="mt-5 pt-5 border-t border-slate-700"
@@ -1300,7 +1300,7 @@
                             <p
                                 class="text-xs text-slate-400 mt-1"
                             >
-                                Locked items stay visible but can never win.
+                                Backroom only. The audience cannot see which items are excluded.
                             </p>
 
                         </div>
@@ -1351,9 +1351,7 @@
                         class="w-full mt-2 bg-slate-900 border border-slate-600 rounded-xl p-3"
                     >
 
-                        <option
-                            value=""
-                        >
+                        <option value="">
                             -- Fair Spin (Random) --
                         </option>
 
@@ -1363,7 +1361,7 @@
                     <p
                         class="text-xs text-slate-500 mt-2"
                     >
-                        If a rigged result is locked, it will be ignored and an unlocked result will be chosen randomly.
+                        If the rigged result is excluded, it will be ignored and a random eligible result will be used.
                     </p>
 
                 </div>
@@ -1845,31 +1843,32 @@ document.getElementById(
 ============================================================= */
 
 /*
-Old database format:
+names JSONB supports:
+
+Old format:
 
 [
     "Prize A",
     "Prize B"
 ]
 
-
 New format:
 
 [
     {
-        name: "Prize A",
-        locked: false
+        "name": "Prize A",
+        "locked": false
     },
-
     {
-        name: "Prize B",
-        locked: true
+        "name": "Prize B",
+        "locked": true
     }
 ]
 
+The locked value is used ONLY by the selection logic
+and the Backroom UI.
 
-This lets us add lock functionality without creating
-a new Supabase column.
+The public wheel intentionally does NOT visually reveal it.
 */
 
 
@@ -1992,11 +1991,9 @@ function chooseTargetIndex(
 
 
     /*
-    Use rigged result only when:
-
-    - index exists
-    - item exists
-    - item is NOT locked
+       A rigged result is honoured only if:
+       - index is valid
+       - the result is NOT locked
     */
 
     if (
@@ -2016,9 +2013,8 @@ function chooseTargetIndex(
 
 
     /*
-    Rigged item is invalid or locked.
-
-    Pick random unlocked item.
+       If the rigged result is locked,
+       silently switch to a random eligible result.
     */
 
     return eligible[
@@ -2711,47 +2707,14 @@ function drawWheel() {
 
 
             /*
-            Locked slices remain visible but dimmed.
+               IMPORTANT:
+
+               There is intentionally NO visual treatment
+               for locked/excluded prizes.
+
+               Locked and unlocked slices look identical
+               to the audience.
             */
-
-            if (
-                entry.locked
-            ) {
-
-                ctx.save();
-
-
-                ctx.beginPath();
-
-
-                ctx.moveTo(
-                    centerX,
-                    centerY
-                );
-
-
-                ctx.arc(
-                    centerX,
-                    centerY,
-                    radius,
-                    startAngle,
-                    endAngle
-                );
-
-
-                ctx.closePath();
-
-
-                ctx.fillStyle =
-                "rgba(15,23,42,.58)";
-
-
-                ctx.fill();
-
-
-                ctx.restore();
-            }
-
 
 
             ctx.lineWidth =
@@ -2800,12 +2763,70 @@ function drawWheel() {
             "middle";
 
 
-            ctx.fillStyle =
-            entry.locked
-            ?
-            "#d1d5db"
-            :
-            "#ffffff";
+
+            /*
+               Select readable text colour according
+               to the active theme.
+
+               Lock state does NOT influence appearance.
+            */
+
+            const sliceColor =
+            wheelColors[
+                index %
+                wheelColors.length
+            ].toLowerCase();
+
+
+            if (
+                activePreset ===
+                "nutrieye"
+            ) {
+
+                const lightSlices = [
+                    "#f4df9a",
+                    "#fff4cf"
+                ];
+
+
+                ctx.fillStyle =
+                lightSlices.includes(
+                    sliceColor
+                )
+                ?
+                "#0f5f5c"
+                :
+                "#ffffff";
+
+            }
+            else if (
+                activePreset ===
+                "jujigrainz"
+            ) {
+
+                const lightSlices = [
+                    "#f2b7c9",
+                    "#fff4f7",
+                    "#f7d5e1"
+                ];
+
+
+                ctx.fillStyle =
+                lightSlices.includes(
+                    sliceColor
+                )
+                ?
+                "#8b193d"
+                :
+                "#ffffff";
+
+            }
+            else {
+
+                ctx.fillStyle =
+                "#ffffff";
+            }
+
 
 
             let fontSize =
@@ -2834,16 +2855,19 @@ function drawWheel() {
             3;
 
 
-            const label =
-            entry.locked
-            ?
-            `🔒 ${entry.name}`
-            :
-            entry.name;
 
+            /*
+               Only display the prize name.
+
+               Never display:
+               - lock emoji
+               - lock wording
+               - lock indicator
+               - dimming
+            */
 
             ctx.fillText(
-                label,
+                entry.name,
                 radius - 30,
                 0,
                 radius - 85
@@ -2858,7 +2882,7 @@ function drawWheel() {
 
 
     /*
-    Premium outer rings
+       Premium outer rings
     */
 
     if (
@@ -2881,6 +2905,25 @@ function drawWheel() {
 
         ctx.strokeStyle =
         "#0f5f5c";
+
+        ctx.stroke();
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            radius - 12,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.lineWidth =
+        4;
+
+        ctx.strokeStyle =
+        "#e5b500";
 
         ctx.stroke();
     }
@@ -2908,12 +2951,31 @@ function drawWheel() {
         "#b12f53";
 
         ctx.stroke();
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            radius - 12,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.lineWidth =
+        4;
+
+        ctx.strokeStyle =
+        "#f6d0dc";
+
+        ctx.stroke();
     }
 
 
 
     /*
-    center
+       Center
     */
 
     ctx.beginPath();
@@ -2929,13 +2991,29 @@ function drawWheel() {
     );
 
 
-    ctx.fillStyle =
-    activePreset ===
-    "classic"
-    ?
-    "#1e293b"
-    :
-    "#ffffff";
+    if (
+        activePreset ===
+        "nutrieye"
+    ) {
+
+        ctx.fillStyle =
+        "#e5b500";
+
+    }
+    else if (
+        activePreset ===
+        "jujigrainz"
+    ) {
+
+        ctx.fillStyle =
+        "#ffffff";
+
+    }
+    else {
+
+        ctx.fillStyle =
+        "#1e293b";
+    }
 
 
     ctx.fill();
@@ -3120,7 +3198,8 @@ function triggerSpinVisuals(
 
 
     /*
-    Small jitter, but safely inside winning slice.
+       Keep random landing movement inside
+       the chosen winning slice.
     */
 
     const jitter =
@@ -3565,7 +3644,7 @@ async function spinFromDisplay() {
         ) {
 
             alert(
-                "No eligible prizes available. All items are locked."
+                "No prizes available."
             );
 
             return;
@@ -3573,8 +3652,11 @@ async function spinFromDisplay() {
 
 
         /*
-        The current winner_index acts as
-        the Backroom rigged result.
+           The public page never knows visibly
+           which prizes are locked.
+
+           It only uses the hidden lock metadata
+           internally.
         */
 
 
@@ -3582,12 +3664,6 @@ async function spinFromDisplay() {
         Number(
             state.winner_index
         );
-
-
-        /*
-        chooseTargetIndex automatically ignores
-        locked rigged items.
-        */
 
 
         const targetIndex =
@@ -3641,11 +3717,6 @@ async function spinFromDisplay() {
 
 
 
-        /*
-        Clean up after spin.
-        */
-
-
         setTimeout(
             async () => {
 
@@ -3666,9 +3737,9 @@ async function spinFromDisplay() {
 
 
                     /*
-                    auto-remove winner
+                       Remove winner after spin,
+                       if enabled.
                     */
-
 
                     if (
                         state.remove_winner ===
@@ -3680,8 +3751,7 @@ async function spinFromDisplay() {
                         .findIndex(
                             entry =>
                             entry.name ===
-                            winner.name &&
-                            !entry.locked
+                            winner.name
                         );
 
 
@@ -3703,11 +3773,9 @@ async function spinFromDisplay() {
 
 
                     /*
-                    clear the rigged result
-                    only if nobody armed another
-                    result while spinning
+                       Clear used rig result only if
+                       no new rig was chosen during spin.
                     */
-
 
                     if (
                         Number(
@@ -3951,7 +4019,7 @@ function renderLockList(
                 ${
                     entry.locked
                     ?
-                    "🔒 Locked"
+                    "🔒 Excluded"
                     :
                     "Eligible"
                 }
@@ -4003,7 +4071,7 @@ function refreshLockedCount() {
     ) {
 
         eligibilityStatus.textContent =
-        "⚠ All items are locked. Wheel cannot spin.";
+        "⚠ All items are excluded. Wheel cannot spin.";
 
 
         eligibilityStatus.className =
@@ -4073,6 +4141,11 @@ function renderRigDropdown(
                 index
             );
 
+
+            /*
+               Lock state is visible only here,
+               inside Backroom.
+            */
 
             option.textContent =
             entry.locked
@@ -4160,11 +4233,6 @@ ctrlNames
         setTimeout(
             () => {
 
-                /*
-                Preserve existing locked names
-                when refreshing list.
-                */
-
                 const locked =
                 getCurrentLockedNames();
 
@@ -4240,11 +4308,6 @@ lockList
 
 
         refreshLockedCount();
-
-
-        /*
-        Lock changes sync immediately.
-        */
 
 
         try {
@@ -4457,13 +4520,13 @@ ctrlRig
         try {
 
             /*
-            We intentionally allow a locked item
-            to be selected here.
+               A locked prize is still allowed to be
+               selected in Backroom.
 
-            The spin code will detect that it is locked
-            and choose a random eligible result instead.
+               When the wheel spins, chooseTargetIndex()
+               detects that it is excluded and secretly
+               switches to a random eligible prize.
             */
-
 
             await updateState({
 
@@ -4608,9 +4671,10 @@ async function spinFromController() {
 
 
     /*
-    chooseTargetIndex handles the locked-rigged clash.
+       If rigIndex points at an excluded item,
+       chooseTargetIndex silently chooses
+       a random eligible prize instead.
     */
-
 
     const targetIndex =
     chooseTargetIndex(
@@ -4703,8 +4767,7 @@ async function spinFromController() {
                     .findIndex(
                         entry =>
                         entry.name ===
-                        winner.name &&
-                        !entry.locked
+                        winner.name
                     );
 
 
